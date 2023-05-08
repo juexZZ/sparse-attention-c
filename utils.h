@@ -49,29 +49,46 @@ void weight_value(double* attn_w, double* value, double* res){
 
 }
 
-void get_row_sparse_idx(int row_id, vector<int>& col_ids){
+void get_row_sparse_idx(int row_id, vector<int>& col_ids, int pattern){
     // get the sparse indexes of a row
     // row_id: the row id
     // col_ids: the column ids of the non zero elements
 
 }
 
-void get_row_share(int rank, int N, vector<int>& row_ids){
+void get_row_share(int rank, int num_procs, int N, vector<int>& row_ids){
     // get each process's share of rows
     // rank: the rank of the process
     // row_ids: the row ids of the rows that this process holds
     // NOTE: currently each process take two rows, from both side to the middle
-    row_ids.push_back(rank);
-    if (rank != N - rank - 1)
-        row_ids.push_back(N - rank - 1);
+    int start_id=N/num_procs/2*rank;
+    int end_id=N/num_procs/2*(rank+1);
+    for(int i=start_id; i<end_id; i++){
+        row_ids.push_back(i);
+        row_ids.push_back(N-i-1);
+    }
+    row_ids.sort();
 }
 
 void get_column_share(int rank, int N, int d, vector<int>& row_ids, 
                     vector<int>& total_col_ids, 
-                    vector<vector<int>>& col_ids_row){
+                    vector<vector<int>>& col_ids_row, int pattern){
     // get each process's share of columns
     // rank: the rank of the process
+    if(pattern==0)
+    {
+        //Strided Pattern
 
+    }
+    else if(pattern==1)
+    {   
+        //Fixed Pattern
+
+    }
+    else
+    {
+        std::throw runtime_error("Invalid Pattern");
+    }
 }
 
 // ********************* I/O *****************************

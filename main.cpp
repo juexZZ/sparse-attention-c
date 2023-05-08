@@ -13,8 +13,9 @@ using namespace std;
 
 int main(int argc, char* argv[]){
     // read query, key and value from seperate files
-    int N = 1000;
+    int N = 1024;
     int d = 128;
+    int c = 16;
     string query_file = "query.txt";
     string key_file = "key.txt";
     string value_file = "value.txt";
@@ -27,18 +28,22 @@ int main(int argc, char* argv[]){
     double* part_query;
     double* part_key;
     double* part_value;
+
     vector<int> row_ids; // the rows this process need to work on for attention
     vector<int> total_col_ids; // the column idx this process needs to process, in total
-    vector<vector<int>> col_ids_row(row_ids.size(), vector<int>(0,0)); // each row's column idx (for sparse attention)
-    get_row_share(rank, N, row_ids);
-    get_column_share(rank, N, d, row_ids, total_col_ids, col_ids_row);
-    if (rank==0){
+    vector<vector<int>> col_ids_row(row_ids.size(), vector<int>(0,0)); // each row's column idx (for sparse attention)    
+
+    int pattern=0; //Two patterns, 0 is strided, 1 is fixed.
+    get_row_share(my_rank,num_procs, N, row_ids);
+    get_column_share(my_rank, N, d, row_ids, total_col_ids, col_ids_row, pattern);
+    if (my_rank==0){
         double* query = new double[N*d];
         for(int i=0; i<N; i++){
             query[i] = new double[d];
         }
         read_data(query, N, d, query_file);
         // todo: distribute to other processes
+        // MPI, send data to proc0ess
 
         // then free query
         delete[] query;

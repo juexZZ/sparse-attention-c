@@ -9,3 +9,7 @@ NYU HPC Spring 23 Course Project
 * [ ] how to implement W x V (Need communication, W is sparse)
   * [ ] each process: part of Q, part K -> attention. which part(sparse index). part of V. Communicate the whole attention weights W.
 * [ ] create sparse index list for each process (and each row)
+
+### Data division
+query, divided by the proc_id
+key, dicided by the sparse pattern and proc_id, union
