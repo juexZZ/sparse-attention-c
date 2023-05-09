@@ -15,7 +15,8 @@ int main(int argc, char* argv[]){
     // read query, key and value from seperate files
     int N = 1024;
     int d = 128;
-    int c = 16;
+    int context_l = 16; // paper l
+    int fixed_c = 0; // paper c
     string query_file = "query.txt";
     string key_file = "key.txt";
     string value_file = "value.txt";
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]){
 
     int pattern=0; //Two patterns, 0 is strided, 1 is fixed.
     get_row_share(my_rank,num_procs, N, row_ids);
-    get_column_share(my_rank, N, d, row_ids, total_col_ids, col_ids_row, pattern);
+    get_column_share(my_rank, N, d, row_ids, total_col_ids, col_ids_row, pattern, context_l, fixed_c);
     if (my_rank==0){
         double* query = new double[N*d];
         for(int i=0; i<N; i++){
@@ -43,7 +44,7 @@ int main(int argc, char* argv[]){
         }
         read_data(query, N, d, query_file);
         // todo: distribute to other processes
-        // MPI, send data to proc0ess
+        // MPI, send data to process
 
         // then free query
         delete[] query;
@@ -68,9 +69,19 @@ int main(int argc, char* argv[]){
         row_sparse_attention(part_query[r], part_key, attn_w[r], col_ids_row[r].size(), d);
     }
     // communicate attention weights
-    
+
     // attention times value
 
+    // free attn_w
+    for(int r=0; r<row_ids.size(); r++){
+        delete[] attn_w[r];
+    }
+    delete[] attn_w;
+    // free the rest
+    delete[] part_query;
+    delete[] part_key;
+    delete[] part_value;
+    
     MPI_Finalize();
 
 }
