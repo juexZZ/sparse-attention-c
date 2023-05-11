@@ -7,6 +7,53 @@
 #include <string>
 using namespace std;
 
+Struct Id_vec{
+    double id;
+    double* vec;
+}
+class SparsePattern
+{
+public:
+    int N,d;
+    int start_row_id;
+    int end_row_id;    
+    vector<int> col_ids;
+    vector<vector<int>>col_ids_row;
+    vector<int> get_row_id(){
+        vector<int> row_ids;
+        for(int i=start_row_id; i<end_row_id; i++){
+            row_ids.push_back(i);
+        }
+        return row_ids;
+    };
+    SparsePattern(int N_, int d_ ,int start, int end, vector<int> col_ids_){
+        N = N_;
+        d = d_;
+        start_row_id = start;
+        end_row_id = end;
+        col_ids = col_ids_;};
+    SparsePattern(){};
+    ~SparsePattern(){};
+};
+
+
+
+template <typename T>
+T* switch_order(T* input, int num, int dim){
+    // switch the order of the matrix, from row major to column major, or vice versa
+    // input: the input matrix, num x dim
+    // output: the output matrix, dim x num
+    // num: number of rows
+    // dim: dimension of each row
+    T* output = new T[num*dim];
+    for(int i=0; i<num; i++){
+        for(int j=0; j<dim; j++){
+            output[j*num+i] = input[i*dim+j];
+        }
+    }
+    return output;
+}
+
 void inplace_softmax(double* row_vec, int length){
     // softmax by row
     // row vec: a row of the attention matrix, only the non zero elements
@@ -85,7 +132,7 @@ void get_strided_sparse_idx(int row_id, vector<int>& col_ids, set<int>& set_tota
     }
 }
 
-void get_row_share(int rank, int num_procs, int N, vector<int>& row_ids){
+void get_row_share(int rank, int num_procs, int N, SparsePattern& pattern_first, SparsePattern& pattern_last){
     // get each process's share of rows
     // rank: the rank of the process
     // row_ids: the row ids of the rows that this process holds
@@ -93,30 +140,35 @@ void get_row_share(int rank, int num_procs, int N, vector<int>& row_ids){
     int start_id=N/num_procs/2*rank;
     int end_id=N/num_procs/2*(rank+1);
     for(int i=start_id; i<end_id; i++){
-        row_ids.push_back(i);
-        row_ids.push_back(N-i-1);
+        row_ids_first.push_back(i);
+        row_ids_last.push_back(N-i-1);
     }
-    row_ids.sort();
+    pattern_first.start_row_id = start_id;
+    pattern_first.end_row_id = end_id;
+    pattern_last.start_row_id = N-end_id;
+    pattern_last.end_row_id = N-start_id;
 }
 
-void get_column_share(int rank, int N, int d, vector<int>& row_ids, 
-                    vector<int>& total_col_ids, 
-                    vector<vector<int>>& col_ids_row, int pattern, int context_l, int fixed_c){
+void get_column_share(int rank, int N, int d,SparsePattern& tmp_pat, int pattern, int context_l, int fixed_c)
+    {
     // get each process's share of columns
     // rank: the rank of the process
     set<int> set_total_col_ids;
     if(pattern==0)
     {
         //Strided Pattern
-        for(int ri=0; ri<row_ids.size(); ri++){
-            get_strided_sparse_idx(row_ids[ri], col_ids_row[ri], set_total_col_ids, context_l);
+        tmp_pat.col_ids_rows.resize(tmp_pat.end_row_id-tmp_pat.start_row_id);
+        for(int ri=tmp_pat.start_row_id; ri<tmp_pat.end_row_id; ri++){
+            get_strided_sparse_idx(ri, tmp_pat.col_ids_rows, set_total_col_ids, context_l);
         }
     }
     else if(pattern==1)
     {   
         //Fixed Pattern
-        for(int ri=0; ri<row_ids.size(); ri++){
-            get_fixed_sparse_idx(row_ids[ri], col_ids_row[ri], set_total_col_ids, context_l, fixed_c);
+        tmp_pat.col_ids_rows.resize(tmp_pat.end_row_id-tmp_pat.start_row_id);        
+        for(int ri=tmp_pat.start_row_id; ri<tmp_pat.end_row_id; ri++)
+        {
+            get_fixed_sparse_idx(ri, tmp_pat.col_ids_rows, set_total_col_ids, context_l);
         }
     }
     else
@@ -124,8 +176,8 @@ void get_column_share(int rank, int N, int d, vector<int>& row_ids,
         std::throw runtime_error("Invalid Pattern");
     }
     // TODO: sort it before returning?
-    total_col_ids.assign(set_total_col_ids.begin(), set_total_col_ids.end());
-    total_col_ids.sort();
+    tmp_pat.col_ids.assign(set_total_col_ids.begin(), set_total_col_ids.end());
+    tmp_pat.col_ids.sort();
 }
 
 // ********************* I/O *****************************

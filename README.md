@@ -13,3 +13,7 @@ NYU HPC Spring 23 Course Project
 ### Data division
 query, divided by the proc_id
 key, dicided by the sparse pattern and proc_id, union
+
+### 05/11/2023
+Yiwei: scatter key and value according to cols_id to different processes
+Juexiao: Modify the function to work with class SparsePattern and struct Id_vec
