@@ -7,33 +7,32 @@
 #include <string>
 using namespace std;
 
-Struct Id_vec{
-    double id;
-    double* vec;
-}
 class SparsePattern
 {
-public:
-    int N,d;
-    int start_row_id;
-    int end_row_id;    
-    vector<int> col_ids;
-    vector<vector<int>>col_ids_row;
-    vector<int> get_row_id(){
-        vector<int> row_ids;
-        for(int i=start_row_id; i<end_row_id; i++){
-            row_ids.push_back(i);
+    public:
+        int N,d;
+        int start_row_id;
+        int end_row_id;    
+        vector<int> col_ids;
+        vector<vector<int>>col_ids_row;
+        vector<int> get_row_id(){
+            vector<int> row_ids;
+            for(int i=start_row_id; i<end_row_id; i++){
+                row_ids.push_back(i);
+            }
+            return row_ids;
+        };
+        SparsePattern(int N_, int d_ ,int start, int end, vector<int> col_ids_){
+            N = N_;
+            d = d_;
+            start_row_id = start;
+            end_row_id = end;
+            col_ids = col_ids_;};
+        int get_rows(){
+            return start_row_id-end_row_id;
         }
-        return row_ids;
-    };
-    SparsePattern(int N_, int d_ ,int start, int end, vector<int> col_ids_){
-        N = N_;
-        d = d_;
-        start_row_id = start;
-        end_row_id = end;
-        col_ids = col_ids_;};
-    SparsePattern(){};
-    ~SparsePattern(){};
+        SparsePattern(){};
+        ~SparsePattern(){};
 };
 
 
