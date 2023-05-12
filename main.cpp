@@ -39,6 +39,8 @@ int main(int argc, char* argv[]){
     get_row_share(my_rank,num_procs, N, pattern_first, pattern_last);
     get_column_share(my_rank, N, d, pattern_first, pattern, context_l, fixed_c);
     get_column_share(my_rank, N, d, pattern_last, pattern, context_l, fixed_c);
+    pattern_first.build_inverse_col_id();
+    pattern_last.build_inverse_col_id();
 
     // For query communication
     double query[N][d];
@@ -75,10 +77,10 @@ int main(int argc, char* argv[]){
     }
 
     //For key communication
-    double** part_key_first[pattern_first.col_ids.size()][d];
-    double** part_key_last[pattern_last.col_ids.size()][d];
-    double** part_val_first[pattern_first.col_ids.size()][d];
-    double** part_val_last[pattern_last.col_ids.size()][d];
+    double** part_key_first = new double[pattern_first.col_ids.size()][d];
+    double** part_key_last = new double[pattern_last.col_ids.size()][d];
+    double** part_val_first = new double[pattern_first.col_ids.size()][d];
+    double** part_val_last = new double[pattern_last.col_ids.size()][d];
     {
         int* sendscounts= new int[num_procs];
         int* col_sizes= new int[num_procs];
@@ -135,8 +137,8 @@ int main(int argc, char* argv[]){
     delete[] key;
     delete[] query;
     // sparse attention
-    double** attn_w_first = new double*[row_ids_first.size()];
-    double** attn_w_last = new double*[row_ids_last.size()];
+    double** attn_w_first = new double*[pattern_first.get_rows()];
+    double** attn_w_last = new double*[pattern_last.get_rows()];
     if (comm_pat==0)
     {
         attn_w_first[r] = new double[col_ids_row_first[r].size()];
@@ -152,10 +154,16 @@ int main(int argc, char* argv[]){
         attn_w_last[r] = new double[pattern_last.col_ids_row[r].size()];
         row_sparse_attention(part_query_last[r], part_key_last, attn_w_last[r], pattern_last.col_ids_row[r].size(), d);
     }
-    // communicate attention weights
 
     // attention times value
-
+    // initialize result matrix as the same size as value, initialize with 0
+    vector<double> result_first(pattern_first.get_rows()*d, 0);
+    vector<double> result_last(pattern_last.get_rows()*d, 0);
+    attn_weight_value(attn_w_first, part_val_first, result_first, pattern_first);
+    attn_weight_value(attn_w_last, part_val_last, result_last, pattern_last);
+    //communicate results, just gather
+    // TODO
+    // MPI_Gather(result_first.data(), pattern_first.get_rows()*d, MPI_DOUBLE, result_first.data(), pattern_first.get_rows()*d, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     // free attn_w
     for(int r=0; r<row_ids.size(); r++){
         delete[] attn_w[r];

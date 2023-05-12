@@ -20,5 +20,6 @@ key, dicided by the sparse pattern and proc_id, union
 Yiwei: ~~scatter key and value according to cols_id to different processes~~
 Might need to combine First SparsePattern and Last SparsePattern to avoid repeat
 
-- [ ] Juexiao: Modify the function to work with class SparsePattern and struct Id_vec
+- [ ] ~Juexiao: Modify the function to work with class SparsePattern and struct Id_vec~
+- [X] Juexiao: Attention x Value
 - [ ] Yiwei: `main.cpp` line 91 double 2-d array change to 1-d, using total_count as index offset

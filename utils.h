@@ -14,6 +14,7 @@ class SparsePattern
         int start_row_id;
         int end_row_id;    
         vector<int> col_ids;
+        vector<int> inverse_col_ids(N, -1);
         vector<vector<int>>col_ids_row;
         vector<int> get_row_id(){
             vector<int> row_ids;
@@ -21,6 +22,11 @@ class SparsePattern
                 row_ids.push_back(i);
             }
             return row_ids;
+        };
+        void build_inverse_col_id(){
+            for(int i=0; i<col_ids.size(); i++){
+                inverse_col_ids[col_ids[i]] = i;
+            }
         };
         SparsePattern(int N_, int d_ ,int start, int end, vector<int> col_ids_){
             N = N_;
@@ -90,13 +96,28 @@ void row_sparse_attention(double* query, double** keys, double* res, int num, in
 
 // obtain results by weight the value matrix with the attention matrix
 // once again follow the order of the attention matrix rows
-void row_attn_weight_value(double* attn_w_row, double* value, double* res){
+void row_attn_weight_value(double* attn_w_row, double* value, 
+    int res_offset, vector<double>& res,
+    vector<int>& col_ids_row, vector<int>& inverse_col_ids, int d){
     // apply attention weights to value columns, results in res
     // attn_w: one row of the attention matrix, sparse, only have the nonzero values
     // value: chunk of value handled by this process, num x dim
     // res: only populate the result's row corresponding to this attn_w_row: 1 x dim
     // NOTE: index using double pointer method or index inverse hash map
+    for(int i=0; i<col_ids_row.size(); i++){
+        int vid = inverse_col_ids[col_ids_row[i]]; // get the index of the value in the part_value
+        for(int j=0; j<d; j++){
+            res[j+res_offset] += attn_w_row[i] * value[vid][j]; // transpose the value matrix? or  change loop order?
+        }
+    }
+}
 
+void attn_weight_value(double** attn_w, double** value, vector<double>& res, SparsePattern& pattern){
+    int row_size = pattern.get_rows();
+    for(int ri=0; ri<row_size; ri++){
+        // int row_id = pattern.start_row_id + ri;
+        row_attn_weight_value(attn_w[ri], value, ri*pattern.d, res, pattern.col_ids_row[ri], pattern.inverse_col_ids, pattern.d);
+    }
 }
 
 void get_fixed_sparse_idx(int row_id, vector<int>& col_ids, set<int>& set_total_col_ids, int l, int c = 0){
