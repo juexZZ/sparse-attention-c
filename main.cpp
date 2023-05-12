@@ -98,30 +98,30 @@ int main(int argc, char* argv[]){
         }        
         // MPI_Gatherv(pattern_first.col_ids.data(), col_size, MPI_INT, col_to_send, col_sizes, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Gatherv(pattern_first.col_ids.data(), col_size, MPI_INT, col_to_send, sendscounts, col_sizes, MPI_INT, 0, MPI_COMM_WORLD);
-        for (size_t i = 0; i < num_procs; i++)
+        // MPI_Status status;
+        // MPI_Request request_out1, request_in1;
+        // MPI_Request request_out2, request_in2;
+        if (my_rank==0)
         {
-            // MPI_Status status;
-            // MPI_Request request_out1, request_in1;
-            // MPI_Request request_out2, request_in2;
-            if (my_rank==0)
+            for (size_t i = 0; i < num_procs; i++)
             {
-               double tmp_key[col_sizes[i]][d];
-               double tmp_val[col_sizes[i]][d];
-               for (size_t j = 0; j < col_sizes[i]; j++)
-               {
+                double tmp_key[col_sizes[i]][d];
+                double tmp_val[col_sizes[i]][d];
+                for (size_t j = 0; j < col_sizes[i]; j++)
+                {
                     for (size_t k = 0; k < d; k++)
                     {
                         tmp_key[j][k]=key[col_to_send[i][j]][k];
                         tmp_val[j][k]=value[col_to_send[i][j]][k];
                     }
                     
-               }
-               MPI_Isend(tmp_key, col_sizes[i]*d, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_REQUEST_NULL);
-               MPI_Isend(tmp_val, col_sizes[i]*d, MPI_DOUBLE, i, 1, MPI_COMM_WORLD, MPI_REQUEST_NULL);
+                }
+                MPI_Isend(tmp_key, col_sizes[i]*d, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_REQUEST_NULL);
+                MPI_Isend(tmp_val, col_sizes[i]*d, MPI_DOUBLE, i, 1, MPI_COMM_WORLD, MPI_REQUEST_NULL);
             }
-            MPI_Recv(part_key_first, col_sizes[i]*d, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-            MPI_Recv(part_val_first, col_sizes[i]*d, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD,MPI_STATUS_IGNORE);        
         }
+        MPI_Recv(part_key_first, col_size*d, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+        MPI_Recv(part_val_first, col_size*d, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD,MPI_STATUS_IGNORE);        
     }
     
 

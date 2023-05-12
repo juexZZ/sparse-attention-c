@@ -88,11 +88,14 @@ void row_sparse_attention(double* query, double** keys, double* res, int num, in
     inplace_softmax(res, num);
 }
 
-void weight_value(double* attn_w, double* value, double* res){
+// obtain results by weight the value matrix with the attention matrix
+// once again follow the order of the attention matrix rows
+void row_attn_weight_value(double* attn_w_row, double* value, double* res){
     // apply attention weights to value columns, results in res
-    // attn_w: the attention matrix, sparse
-    // value: column of value V
-    // this is sparse matrix times column vector
+    // attn_w: one row of the attention matrix, sparse, only have the nonzero values
+    // value: chunk of value handled by this process, num x dim
+    // res: only populate the result's row corresponding to this attn_w_row: 1 x dim
+    // NOTE: index using double pointer method or index inverse hash map
 
 }
 
