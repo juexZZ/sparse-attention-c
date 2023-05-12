@@ -135,13 +135,8 @@ void get_row_share(int rank, int num_procs, int N, SparsePattern& pattern_first,
     // get each process's share of rows
     // rank: the rank of the process
     // row_ids: the row ids of the rows that this process holds
-    // NOTE: currently each process take two rows, from both side to the middle
     int start_id=N/num_procs/2*rank;
     int end_id=N/num_procs/2*(rank+1);
-    for(int i=start_id; i<end_id; i++){
-        row_ids_first.push_back(i);
-        row_ids_last.push_back(N-i-1);
-    }
     pattern_first.start_row_id = start_id;
     pattern_first.end_row_id = end_id;
     pattern_last.start_row_id = N-end_id;
@@ -158,7 +153,8 @@ void get_column_share(int rank, int N, int d,SparsePattern& tmp_pat, int pattern
         //Strided Pattern
         tmp_pat.col_ids_rows.resize(tmp_pat.end_row_id-tmp_pat.start_row_id);
         for(int ri=tmp_pat.start_row_id; ri<tmp_pat.end_row_id; ri++){
-            get_strided_sparse_idx(ri, tmp_pat.col_ids_rows, set_total_col_ids, context_l);
+            // index the col_ids_rows accordingly
+            get_strided_sparse_idx(ri, tmp_pat.col_ids_rows[ri-tmp_pat.start_row_id], set_total_col_ids, context_l);
         }
     }
     else if(pattern==1)
@@ -167,7 +163,8 @@ void get_column_share(int rank, int N, int d,SparsePattern& tmp_pat, int pattern
         tmp_pat.col_ids_rows.resize(tmp_pat.end_row_id-tmp_pat.start_row_id);        
         for(int ri=tmp_pat.start_row_id; ri<tmp_pat.end_row_id; ri++)
         {
-            get_fixed_sparse_idx(ri, tmp_pat.col_ids_rows, set_total_col_ids, context_l);
+            // index the col_ids_rows accordingly
+            get_fixed_sparse_idx(ri, tmp_pat.col_ids_rows[ri-tmp_pat.start_row_id], set_total_col_ids, context_l);
         }
     }
     else

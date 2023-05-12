@@ -96,7 +96,8 @@ int main(int argc, char* argv[]){
                 col_to_send[i]=new int[col_sizes[i]];
             }            
         }        
-        MPI_Gatherv(pattern_first.col_ids.data(), col_size, MPI_INT, col_to_send, col_sizes, MPI_INT, 0, MPI_COMM_WORLD);
+        // MPI_Gatherv(pattern_first.col_ids.data(), col_size, MPI_INT, col_to_send, col_sizes, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(pattern_first.col_ids.data(), col_size, MPI_INT, col_to_send, sendscounts, col_sizes, MPI_INT, 0, MPI_COMM_WORLD);
         for (size_t i = 0; i < num_procs; i++)
         {
             // MPI_Status status;
@@ -143,13 +144,13 @@ int main(int argc, char* argv[]){
     }
     
     for(int r=0; r<row_ids_first.size(); r++){
-        attn_w_first[r] = new double[col_ids_row_first[r].size()];
-        row_sparse_attention(part_query_first[r], part_key_first, attn_w_first[r], col_ids_row_last[r].size(), d);
+        attn_w_first[r] = new double[pattern_first.col_ids_row[r].size()];
+        row_sparse_attention(part_query_first[r], part_key_first, attn_w_first[r], pattern_first.col_ids_row[r].size(), d);
     }
     for (int r = 0; r < row_ids_last.size(); r++)
     {
-        attn_w_last[r] = new double[col_ids_row_last[r].size()];
-        row_sparse_attention(part_query_last[r], part_key_last, attn_w_last[r], col_ids_row_last[r].size(), d);
+        attn_w_last[r] = new double[pattern_last.col_ids_row[r].size()];
+        row_sparse_attention(part_query_last[r], part_key_last, attn_w_last[r], pattern_last.col_ids_row[r].size(), d);
     }
     // communicate attention weights
 
@@ -163,10 +164,10 @@ int main(int argc, char* argv[]){
     // free the rest
     delete[] part_query_first;
     delete[] part_key_first;
-    delete[] part_value_first;
+    delete[] part_val_first;
     delete[] part_query_last;
     delete[] part_key_last;
-    delete[] part_value_last;
+    delete[] part_val_last;
     
     delete[] sendscounts;
     delete[] displs_first;
