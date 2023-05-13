@@ -13,10 +13,6 @@ using namespace std;
 
 int main(int argc, char* argv[]){
     // read query, key and value from seperate files
-
-    //Two communication patterns, 0 prepare all the data needed before computing, 1 compute and communicate at the same time.
-    int comm_pat=0; 
-
     int N = 1024;
     int d = 128;
     int context_l = 16; // paper l
@@ -62,18 +58,24 @@ int main(int argc, char* argv[]){
     int row_size=pattern_first.get_rows();
     double** part_query_first[row_size][d];
     double** part_query_last[row_size][d];
+    int* row_sizes= new int[num_procs];
+    int* displs_first = new int[num_procs];
+    int* displs_last = new int[num_procs];
     {
-        int* sendscounts= new int[num_procs];
-        int* displs_first = new int[num_procs];
-        int* displs_last = new int[num_procs];
+        int* sendcounts= new int[num_procs];
         int sendcount=row_size*d;
         int first_off=pattern_first.start_row_id*d;
         int last_off=pattern_last.start_row_id*d;
-        MPI_Gather(&sendcount, 1, MPI_INT, sendscounts, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gather(&row_size, 1, MPI_INT, row_sizes, 1, MPI_INT, 0, MPI_COMM_WORLD);        
         MPI_Gather(&first_off, 1, MPI_INT, displs_first, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Gather(&last_off, 1, MPI_INT, displs_last, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Scatterv(query, sendscounts, displs_first, MPI_DOUBLE, part_query_first, sendscounts[my_rank], MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Scatterv(query, sendscounts, displs_last, MPI_DOUBLE, part_query_last, sendscounts[my_rank], MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        for (size_t i = 0; i < num_procs; i++)
+        {
+            sendcounts[i]=row_sizes[i]*d;
+        }
+        MPI_Scatterv(query, sendcounts, displs_first, MPI_DOUBLE, part_query_first, sendcounts[my_rank], MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Scatterv(query, sendcounts, displs_last, MPI_DOUBLE, part_query_last, sendcounts[my_rank], MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        delete[] sendcounts;
     }
 
     //For key communication
@@ -82,24 +84,38 @@ int main(int argc, char* argv[]){
     double** part_val_first = new double[pattern_first.col_ids.size()][d];
     double** part_val_last = new double[pattern_last.col_ids.size()][d];
     {
-        int* sendscounts= new int[num_procs];
+        int* sendcounts= new int[num_procs];
         int* col_sizes= new int[num_procs];
         int col_size=pattern_first.col_ids.size();
         MPI_Gather(&col_size,1,MPI_INT,col_sizes,1,MPI_INT,0,MPI_COMM_WORLD);
         int** col_to_send;
+        int* mpi_col_to_send;
         int total_cols=0;
         if (my_rank==0)
         {
             col_to_send=new int*[num_procs];
             for (size_t i = 0; i < num_procs; i++)
             {
-                sendscounts[i]=col_sizes[i]*d;
+                sendcounts[i]=col_sizes[i]*d;
                 total_cols+=col_sizes[i];
                 col_to_send[i]=new int[col_sizes[i]];
-            }            
+            }
+            mpi_col_to_send=new int[total_cols];            
         }        
-        // MPI_Gatherv(pattern_first.col_ids.data(), col_size, MPI_INT, col_to_send, col_sizes, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Gatherv(pattern_first.col_ids.data(), col_size, MPI_INT, col_to_send, sendscounts, col_sizes, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(pattern_first.col_ids.data(), col_size, MPI_INT, mpi_col_to_send, sendcounts, col_sizes, MPI_INT, 0, MPI_COMM_WORLD);
+        if (my_rank==0)
+        {
+            int offset=0;
+            for (size_t i = 0; i < num_procs; i++)
+            {
+                for (size_t j = 0; j < col_sizes[i]; j++)
+                {
+                    col_to_send[i][j]=mpi_col_to_send[offset+j];
+                }
+                offset+=col_sizes[i];
+            }
+            delete[] mpi_col_to_send;
+        }
         // MPI_Status status;
         // MPI_Request request_out1, request_in1;
         // MPI_Request request_out2, request_in2;
@@ -139,21 +155,20 @@ int main(int argc, char* argv[]){
     // sparse attention
     double** attn_w_first = new double*[pattern_first.get_rows()];
     double** attn_w_last = new double*[pattern_last.get_rows()];
-    if (comm_pat==0)
-    {
-        attn_w_first[r] = new double[col_ids_row_first[r].size()];
-        delete[] full_keys;
-    }
+
+    attn_w_first[r] = new double[col_ids_row_first[r].size()];
+
     
     for(int r=0; r<row_ids_first.size(); r++){
         attn_w_first[r] = new double[pattern_first.col_ids_row[r].size()];
         row_sparse_attention(part_query_first[r], part_key_first, attn_w_first[r], pattern_first.col_ids_row[r].size(), d);
     }
-    for (int r = 0; r < row_ids_last.size(); r++)
-    {
-        attn_w_last[r] = new double[pattern_last.col_ids_row[r].size()];
-        row_sparse_attention(part_query_last[r], part_key_last, attn_w_last[r], pattern_last.col_ids_row[r].size(), d);
-    }
+
+    // for (int r = 0; r < row_ids_last.size(); r++)
+    // {
+    //     attn_w_last[r] = new double[pattern_last.col_ids_row[r].size()];
+    //     row_sparse_attention(part_query_last[r], part_key_last, attn_w_last[r], pattern_last.col_ids_row[r].size(), d);
+    // }
 
     // attention times value
     // initialize result matrix as the same size as value, initialize with 0
@@ -163,7 +178,17 @@ int main(int argc, char* argv[]){
     attn_weight_value(attn_w_last, part_val_last, result_last, pattern_last);
     //communicate results, just gather
     // TODO
-    // MPI_Gather(result_first.data(), pattern_first.get_rows()*d, MPI_DOUBLE, result_first.data(), pattern_first.get_rows()*d, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    double result[N][d];
+    {
+        int* sendcounts= new int[num_procs];
+        for (size_t i = 0; i < num_procs; i++)
+        {
+            sendcounts[i]=row_sizes[i]*d;
+        }
+        MPI_Gatherv(result_first.data(),result_first.size(), MPI_DOUBLE, result, sendcounts, displs_first, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(result_last.data(),result_last.size(), MPI_DOUBLE, result, sendcounts, displs_last, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        delete[] sendcounts;
+    }
     // free attn_w
     for(int r=0; r<row_ids.size(); r++){
         delete[] attn_w[r];
@@ -176,8 +201,7 @@ int main(int argc, char* argv[]){
     delete[] part_query_last;
     delete[] part_key_last;
     delete[] part_val_last;
-    
-    delete[] sendscounts;
+    delete[] row_sizes;
     delete[] displs_first;
     delete[] displs_last;
 
