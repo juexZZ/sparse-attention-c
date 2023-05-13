@@ -12,14 +12,25 @@ class SparsePattern
 {
     public:
         int N,d;
-        int start_row_id;
-        int end_row_id;    
+        int start_row_id_front;
+        int end_row_id_front;
+        int start_row_id_back;
+        int end_row_id_back;    
         vector<int> col_ids;
+        vector<int> row_ids;
         vector<int> inverse_col_ids;
         vector<vector<int>>col_ids_row;
         void build_inverse_col_id(){
             for(int i=0; i<col_ids.size(); i++){
                 inverse_col_ids[col_ids[i]] = i;
+            }
+        };
+        void build_row_ids(){
+            for(int ri=start_row_id_front; ri<end_row_id_front; ri++){
+                row_ids.push_back(ri);
+            }
+            for(int ri=start_row_id_back; ri<end_row_id_back; ri++){
+                row_ids.push_back(ri);
             }
         };
         SparsePattern(int N_, int d_ ): inverse_col_ids(N_,-1){
@@ -28,8 +39,14 @@ class SparsePattern
             // inverse_col_ids.resize(N_);
             // std::fill(inverse_col_ids.begin(), inverse_col_ids.end(), -1);
             };
+        int get_rows_front(){
+            return end_row_id_front-start_row_id_front;
+        }
+        int get_rows_back(){
+            return end_row_id_back-start_row_id_back;
+        }
         int get_rows(){
-            return end_row_id-start_row_id;
+            return row_ids.size(); // should equal to get_rows_front() + get_rows_back()
         }
         SparsePattern(){};
         ~SparsePattern(){};
@@ -78,12 +95,16 @@ double scaled_dot(double* query, double* key, int dim){
     return prod / sqrt(dim);
 }   
 
-void row_sparse_attention(double* query, double* keys, double* res, int num, int dim){
+void row_sparse_attention(double* query, double* keys, double* res, SparsePattern& pattern, int r){
     // get sparse attention matrix by each row
-    // keys is num x d, n equals to the number of nonzeros
+    // keys is total_col_ids x d,
     // predefine num and obtain Vs according to sparse indexes
+    int num = pattern.col_ids_row[r].size();
+    int dim = pattern.d;
     for(int i=0; i<num; i++){
-        res[i] = scaled_dot(query, keys+i*dim, dim);
+        int global_col_idx = pattern.col_ids_row[r][i];
+        int local_col_idx = pattern.inverse_col_ids[global_col_idx];
+        res[i] = scaled_dot(query, keys+local_col_idx*dim, dim);
     }
     inplace_softmax(res, num);
 }
@@ -149,16 +170,17 @@ void get_strided_sparse_idx(int row_id, vector<int>& col_ids, set<int>& set_tota
     }
 }
 
-void get_row_share(int rank, int num_procs, int N, SparsePattern& pattern_first, SparsePattern& pattern_last){
+void get_row_share(int rank, int num_procs, int N, SparsePattern& pattern_proc){
     // get each process's share of rows
     // rank: the rank of the process
     // row_ids: the row ids of the rows that this process holds
     int start_id=N/num_procs/2*rank;
     int end_id=N/num_procs/2*(rank+1);
-    pattern_first.start_row_id = start_id;
-    pattern_first.end_row_id = end_id;
-    pattern_last.start_row_id = N-end_id;
-    pattern_last.end_row_id = N-start_id;
+    pattern_proc.start_row_id_front = start_id;
+    pattern_proc.end_row_id_front = end_id;
+    pattern_proc.start_row_id_back = N - end_id;
+    pattern_proc.end_row_id_back = N - start_id;
+    pattern_proc.build_row_ids();
 }
 
 void get_column_share(int rank, int N, int d,SparsePattern& tmp_pat, int pattern, int context_l, int fixed_c)
@@ -169,23 +191,23 @@ void get_column_share(int rank, int N, int d,SparsePattern& tmp_pat, int pattern
     if(pattern==0)
     {
         //Strided Pattern
-        tmp_pat.col_ids_row.resize(tmp_pat.end_row_id-tmp_pat.start_row_id);
-        for(int ri=tmp_pat.start_row_id; ri<tmp_pat.end_row_id; ri++){
-            // index the col_ids_rows accordingly
-            get_strided_sparse_idx(ri, tmp_pat.col_ids_row[ri-tmp_pat.start_row_id], set_total_col_ids, context_l);
+        tmp_pat.col_ids_row.resize(tmp_pat.get_rows());
+        for(int i = 0; i < tmp_pat.get_rows(); i++)
+        {
+            get_strided_sparse_idx(tmp_pat.row_ids[i], tmp_pat.col_ids_row[i], set_total_col_ids, context_l);   
         }
     }
     else if(pattern==1)
     {   
         //Fixed Pattern
-        tmp_pat.col_ids_row.resize(tmp_pat.end_row_id-tmp_pat.start_row_id);        
-        for(int ri=tmp_pat.start_row_id; ri<tmp_pat.end_row_id; ri++)
+        tmp_pat.col_ids_row.resize(tmp_pat.get_rows());        
+        for(int i=0; i < tmp_pat.get_rows(); i++)
         {
             // index the col_ids_rows accordingly
-            get_fixed_sparse_idx(ri, tmp_pat.col_ids_row[ri-tmp_pat.start_row_id], set_total_col_ids, context_l);
+            get_fixed_sparse_idx(tmp_pat.row_ids[i], tmp_pat.col_ids_row[i], set_total_col_ids, context_l, fixed_c);
         }
     }
-    // TODO: sort it before returning?
+    // sort it before returning
     tmp_pat.col_ids.assign(set_total_col_ids.begin(), set_total_col_ids.end());
     sort(tmp_pat.col_ids.begin(), tmp_pat.col_ids.end());
 }

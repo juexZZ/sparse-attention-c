@@ -32,15 +32,16 @@ int main(int argc, char* argv[]){
     // each process hold: part_query_first, part_key_first, part_value_first, part_query_last, part_key_last, part_value_last
     // to keep thread load balanced
 
-    SparsePattern pattern_first(N,d);
-    SparsePattern pattern_last(N,d);
+    // SparsePattern pattern_first(N,d);
+    // SparsePattern pattern_last(N,d);
+    SparsePattern pattern_proc(N, d);
 
-    int pattern=0; //Two patterns, 0 is strided, 1 is fixed.
-    get_row_share(my_rank,num_procs, N, pattern_first, pattern_last);
-    get_column_share(my_rank, N, d, pattern_first, pattern, context_l, fixed_c);
-    get_column_share(my_rank, N, d, pattern_last, pattern, context_l, fixed_c);
-    pattern_first.build_inverse_col_id();
-    pattern_last.build_inverse_col_id();
+    int pattern=1; //Two patterns, 0 is strided, 1 is fixed.
+    get_row_share(my_rank,num_procs, N, pattern_proc);
+    get_column_share(my_rank, N, d, pattern_proc, pattern, context_l, fixed_c);
+    // get_column_share(my_rank, N, d, pattern_last, pattern, context_l, fixed_c);
+    pattern_proc.build_inverse_col_id();
+    // pattern_last.build_inverse_col_id();
 
     // For query communication
     double query[N*d];
@@ -49,48 +50,65 @@ int main(int argc, char* argv[]){
     if (my_rank==0){    
        
         read_data(query, N, d, query_file);
-        // then free query
-        // read key
        
         read_data(key, N, d, key_file);
-        // todo: distribute to other processes        
-        // read value
 
         read_data(value, N, d, value_file);
         
     }
-    int row_size=pattern_first.get_rows();
-    double part_query_first[row_size*d];
-    double part_query_last[row_size*d];
-    int* row_sizes= new int[num_procs];
-    int* displs_first = new int[num_procs];
-    int* displs_last = new int[num_procs];
+    int row_size=pattern_proc.get_rows();
+    // double part_query_first[row_size*d];
+    // double part_query_last[row_size*d];
+    double part_query[row_size*d];
+    int row_size_front = pattern_proc.get_rows_front();
+    int row_size_back = pattern_proc.get_rows_back();
+    double* part_query_back = part_query+row_size_front*d;
+    int* row_sizes_front= new int[num_procs];
+    int* row_sizes_back = new int[num_procs];
+    int* displs_front = new int[num_procs];
+    int* displs_back = new int[num_procs];
+    int sendcount_front=row_size_front*d;
+    int sendcount_back = row_size_back*d;
     {
-        int* sendcounts= new int[num_procs];
-        int sendcount=row_size*d;
-        int first_off=pattern_first.start_row_id*d;
-        int last_off=pattern_last.start_row_id*d;
-        MPI_Gather(&row_size, 1, MPI_INT, row_sizes, 1, MPI_INT, 0, MPI_COMM_WORLD);        
-        MPI_Gather(&first_off, 1, MPI_INT, displs_first, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Gather(&last_off, 1, MPI_INT, displs_last, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        int* sendcounts_front= new int[num_procs];
+        int* sendcounts_back = new int[num_procs];
+        int front_off=pattern_proc.start_row_id_front*d;
+        int back_off=pattern_proc.start_row_id_back*d;
+        MPI_Gather(&row_size_front, 1, MPI_INT, row_sizes_front, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gather(&row_size_back, 1, MPI_INT, row_sizes_back, 1, MPI_INT, 0, MPI_COMM_WORLD);        
+        MPI_Gather(&front_off, 1, MPI_INT, displs_front, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gather(&back_off, 1, MPI_INT, displs_back, 1, MPI_INT, 0, MPI_COMM_WORLD);
         for (size_t i = 0; i < num_procs; i++)
         {
-            sendcounts[i]=row_sizes[i]*d;
+            sendcounts_front[i]=row_sizes_front[i]*d;
+            sendcounts_back[i] = row_sizes_back[i]*d;
         }
-        MPI_Scatterv(query, sendcounts, displs_first, MPI_DOUBLE, part_query_first, sendcounts[my_rank], MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Scatterv(query, sendcounts, displs_last, MPI_DOUBLE, part_query_last, sendcounts[my_rank], MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        delete[] sendcounts;
+        if (my_rank==0)
+        {
+            for (size_t i = 0; i < num_procs; i++)
+            {
+                std::cout<<"row_sizes_front "<<row_sizes_front[i]<<std::endl;
+                std::cout<<"row_sizes_back "<<row_sizes_back[i]<<std::endl;
+            }           
+        }
+        
+        MPI_Scatterv(query, sendcounts_front, displs_front, MPI_DOUBLE, part_query, sendcount_front, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Scatterv(query, sendcounts_back, displs_back, MPI_DOUBLE, part_query_back, sendcount_back, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        delete[] sendcounts_front;
+        delete[] sendcounts_back;
     }
-    std::cout<<"Scatter query done"<<std::endl;
+    std::cout<<"Scatter query done "<<my_rank<<std::endl;
     //For key communication
-    double* part_key_first = new double[pattern_first.col_ids.size()*d];
-    double* part_key_last = new double[pattern_last.col_ids.size()*d];
-    double* part_val_first = new double[pattern_first.col_ids.size()*d];
-    double* part_val_last = new double[pattern_last.col_ids.size()*d];
+    double* part_key = new double[pattern_proc.col_ids.size()*d];
+    double* part_val = new double[pattern_proc.col_ids.size()*d];
+    // double* part_key_first = new double[pattern_first.col_ids.size()*d];
+    // double* part_key_last = new double[pattern_last.col_ids.size()*d];
+    // double* part_val_first = new double[pattern_first.col_ids.size()*d];
+    // double* part_val_last = new double[pattern_last.col_ids.size()*d];
     {
         int* sendcounts= new int[num_procs];
         int* col_sizes= new int[num_procs];
-        int col_size=pattern_first.col_ids.size();
+        int col_size=pattern_proc.col_ids.size();
         MPI_Gather(&col_size,1,MPI_INT,col_sizes,1,MPI_INT,0,MPI_COMM_WORLD);
         int** col_to_send;
         int* mpi_col_to_send;
@@ -112,7 +130,7 @@ int main(int argc, char* argv[]){
             offsets[i]=offsets[i-1]+col_sizes[i-1];
         }
               
-        MPI_Gatherv(pattern_first.col_ids.data(), col_size, MPI_INT, mpi_col_to_send, sendcounts, offsets.data(), MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(pattern_proc.col_ids.data(), col_size, MPI_INT, mpi_col_to_send, sendcounts, offsets.data(), MPI_INT, 0, MPI_COMM_WORLD);
         std::cout<<"Gather key done"<<std::endl;
         if (my_rank==0)
         {
@@ -148,22 +166,23 @@ int main(int argc, char* argv[]){
                 }
                 MPI_Isend(tmp_key, col_sizes[i]*d, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &request_out1);
                 MPI_Isend(tmp_val, col_sizes[i]*d, MPI_DOUBLE, i, 1, MPI_COMM_WORLD, &request_out2);
-                std::cout<<"send"<<std::endl;    
+                std::cout<<"send "<<my_rank<<std::endl;    
             }
         }
-        MPI_Recv(part_key_first, col_size*d, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-        MPI_Recv(part_val_first, col_size*d, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD,MPI_STATUS_IGNORE); 
-        std::cout<<"recv"<<std::endl;       
+        MPI_Recv(part_key, col_size*d, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+        MPI_Recv(part_val, col_size*d, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD,MPI_STATUS_IGNORE); 
+        std::cout<<"recv "<<my_rank<<std::endl;       
     }
     
     // sparse attention
-    double** attn_w_first = new double*[pattern_first.get_rows()];
-    double** attn_w_last = new double*[pattern_last.get_rows()];
+    double** attn_w = new double*[pattern_proc.get_rows()];
+    // double** attn_w_first = new double*[pattern_first.get_rows()];
+    // double** attn_w_last = new double*[pattern_last.get_rows()];
 
     
-    for(int r=0; r<pattern_first.get_rows(); r++){
-        attn_w_first[r] = new double[pattern_first.col_ids_row[r].size()];
-        row_sparse_attention(part_query_first+r*d, part_key_first, attn_w_first[r], pattern_first.col_ids_row[r].size(), d);
+    for(int r=0; r<pattern_proc.get_rows(); r++){
+        attn_w[r] = new double[pattern_proc.col_ids_row[r].size()];
+        row_sparse_attention(part_query+r*d, part_key, attn_w[r], pattern_proc, r);
     }
 
     // for (int r = 0; r < row_ids_last.size(); r++)
@@ -174,36 +193,39 @@ int main(int argc, char* argv[]){
 
     // attention times value
     // initialize result matrix as the same size as value, initialize with 0
-    vector<double> result_first(pattern_first.get_rows()*d, 0);
-    vector<double> result_last(pattern_last.get_rows()*d, 0);
-    attn_weight_value(attn_w_first, part_val_first, result_first, pattern_first);
+    vector<double> part_result(pattern_proc.get_rows()*d, 0);
+    attn_weight_value(attn_w, part_val, part_result, pattern_proc);
     // attn_weight_value(attn_w_last, part_val_last, result_last, pattern_last);
     //communicate results, just gather
     // TODO
     double result[N][d];
     {
-        int* sendcounts= new int[num_procs];
+        int* sendcounts_front= new int[num_procs];
+        int* sendcounts_back = new int[num_procs];
         for (size_t i = 0; i < num_procs; i++)
         {
-            sendcounts[i]=row_sizes[i]*d;
+            sendcounts_front[i]=row_sizes_front[i]*d;
+            sendcounts_back[i] =row_sizes_back[i]*d;
         }
-        MPI_Gatherv(result_first.data(),result_first.size(), MPI_DOUBLE, result, sendcounts, displs_first, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        // MPI_Gatherv(result_last.data(),result_last.size(), MPI_DOUBLE, result, sendcounts, displs_last, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        delete[] sendcounts;
+        // idspls only significant to the root
+        MPI_Gatherv(part_result.data(), sendcount_front, MPI_DOUBLE, result, sendcounts_front, displs_front, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(part_result.data()+sendcount_front, sendcount_back, MPI_DOUBLE, result, sendcounts_back, displs_back, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        std::cout<<"collect result "<<my_rank<<std::endl;
+        delete[] sendcounts_front;
+        delete[] sendcounts_back;
     }
     // free attn_w
-    for(int r=0; r<pattern_first.get_rows(); r++){
-        delete[] attn_w_first[r];
+    for(int r=0; r<pattern_proc.get_rows(); r++){
+        delete[] attn_w[r];
     }
-    delete[] attn_w_first;
+    delete[] attn_w;
     // free the rest
-    delete[] part_key_first;
-    delete[] part_val_first;
-    delete[] part_key_last;
-    delete[] part_val_last;
-    delete[] row_sizes;
-    delete[] displs_first;
-    delete[] displs_last;
+    delete[] part_key;
+    delete[] part_val;
+    delete[] row_sizes_front;
+    delete[] row_sizes_back;
+    delete[] displs_front;
+    delete[] displs_back;
 
     MPI_Finalize();
 
