@@ -2,6 +2,17 @@
 
 NYU HPC Spring 23 Course Project
 
+### Generate data
+
+python and numpy is required to `data_gen.py`. For example:
+
+```python
+python data_gen.py 100 10 random
+python data_gen.py 100 10 ordered
+```
+
+data will be stored as `query.txt`, `key.txt` and `value.txt` respectively.
+
 ### Todo list
 
 * [ ] how to start each process (partition data according to each row's sparse index)
