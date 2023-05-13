@@ -79,17 +79,17 @@ double scaled_dot(double* query, double* key, int dim){
     // dot product of u and v, scaled
     double prod = 0;
     for (int i=0; i<dim; i++){
-        prod += query[i] * key[i];
+        prod += *(query+i) * *(key+i);
     }
     return prod / sqrt(dim);
 }   
 
-void row_sparse_attention(double* query, double** keys, double* res, int num, int dim){
+void row_sparse_attention(double* query, double* keys, double* res, int num, int dim){
     // get sparse attention matrix by each row
     // keys is num x d, n equals to the number of nonzeros
     // predefine num and obtain Vs according to sparse indexes
     for(int i=0; i<num; i++){
-        res[i] = scaled_dot(query, keys[i], dim);
+        res[i] = scaled_dot(query, keys+i*dim, dim);
     }
     inplace_softmax(res, num);
 }
@@ -107,12 +107,12 @@ void row_attn_weight_value(double* attn_w_row, double* value,
     for(int i=0; i<col_ids_row.size(); i++){
         int vid = inverse_col_ids[col_ids_row[i]]; // get the index of the value in the part_value
         for(int j=0; j<d; j++){
-            res[j+res_offset] += attn_w_row[i] * value[vid][j]; // transpose the value matrix? or  change loop order?
+            res[j+res_offset] += attn_w_row[i] * value[vid*d+j]; // transpose the value matrix? or  change loop order?
         }
     }
 }
 
-void attn_weight_value(double** attn_w, double** value, vector<double>& res, SparsePattern& pattern){
+void attn_weight_value(double** attn_w, double* value, vector<double>& res, SparsePattern& pattern){
     int row_size = pattern.get_rows();
     for(int ri=0; ri<row_size; ri++){
         // int row_id = pattern.start_row_id + ri;

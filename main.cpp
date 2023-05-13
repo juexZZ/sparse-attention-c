@@ -56,8 +56,8 @@ int main(int argc, char* argv[]){
         
     }
     int row_size=pattern_first.get_rows();
-    double** part_query_first[row_size][d];
-    double** part_query_last[row_size][d];
+    double* part_query_first[row_size*d];
+    double* part_query_last[row_size*d];
     int* row_sizes= new int[num_procs];
     int* displs_first = new int[num_procs];
     int* displs_last = new int[num_procs];
@@ -79,10 +79,10 @@ int main(int argc, char* argv[]){
     }
 
     //For key communication
-    double** part_key_first = new double[pattern_first.col_ids.size()][d];
-    double** part_key_last = new double[pattern_last.col_ids.size()][d];
-    double** part_val_first = new double[pattern_first.col_ids.size()][d];
-    double** part_val_last = new double[pattern_last.col_ids.size()][d];
+    double* part_key_first = new double[pattern_first.col_ids.size()*d];
+    double* part_key_last = new double[pattern_last.col_ids.size()*d];
+    double* part_val_first = new double[pattern_first.col_ids.size()*d];
+    double* part_val_last = new double[pattern_last.col_ids.size()*d];
     {
         int* sendcounts= new int[num_procs];
         int* col_sizes= new int[num_procs];
@@ -161,7 +161,7 @@ int main(int argc, char* argv[]){
     
     for(int r=0; r<row_ids_first.size(); r++){
         attn_w_first[r] = new double[pattern_first.col_ids_row[r].size()];
-        row_sparse_attention(part_query_first[r], part_key_first, attn_w_first[r], pattern_first.col_ids_row[r].size(), d);
+        row_sparse_attention(part_query_first+r*d, part_key_first, attn_w_first[r], pattern_first.col_ids_row[r].size(), d);
     }
 
     // for (int r = 0; r < row_ids_last.size(); r++)
