@@ -1,0 +1,1 @@
+mpicxx -std=c++11 -O3 -march=native main.cpp -o main

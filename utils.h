@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <algorithm>
 using namespace std;
 
 class SparsePattern
@@ -14,28 +15,21 @@ class SparsePattern
         int start_row_id;
         int end_row_id;    
         vector<int> col_ids;
-        vector<int> inverse_col_ids(N, -1);
+        vector<int> inverse_col_ids;
         vector<vector<int>>col_ids_row;
-        vector<int> get_row_id(){
-            vector<int> row_ids;
-            for(int i=start_row_id; i<end_row_id; i++){
-                row_ids.push_back(i);
-            }
-            return row_ids;
-        };
         void build_inverse_col_id(){
             for(int i=0; i<col_ids.size(); i++){
                 inverse_col_ids[col_ids[i]] = i;
             }
         };
-        SparsePattern(int N_, int d_ ,int start, int end, vector<int> col_ids_){
+        SparsePattern(int N_, int d_ ): inverse_col_ids(N_,-1){
             N = N_;
             d = d_;
-            start_row_id = start;
-            end_row_id = end;
-            col_ids = col_ids_;};
+            // inverse_col_ids.resize(N_);
+            // std::fill(inverse_col_ids.begin(), inverse_col_ids.end(), -1);
+            };
         int get_rows(){
-            return start_row_id-end_row_id;
+            return end_row_id-start_row_id;
         }
         SparsePattern(){};
         ~SparsePattern(){};
@@ -175,29 +169,25 @@ void get_column_share(int rank, int N, int d,SparsePattern& tmp_pat, int pattern
     if(pattern==0)
     {
         //Strided Pattern
-        tmp_pat.col_ids_rows.resize(tmp_pat.end_row_id-tmp_pat.start_row_id);
+        tmp_pat.col_ids_row.resize(tmp_pat.end_row_id-tmp_pat.start_row_id);
         for(int ri=tmp_pat.start_row_id; ri<tmp_pat.end_row_id; ri++){
             // index the col_ids_rows accordingly
-            get_strided_sparse_idx(ri, tmp_pat.col_ids_rows[ri-tmp_pat.start_row_id], set_total_col_ids, context_l);
+            get_strided_sparse_idx(ri, tmp_pat.col_ids_row[ri-tmp_pat.start_row_id], set_total_col_ids, context_l);
         }
     }
     else if(pattern==1)
     {   
         //Fixed Pattern
-        tmp_pat.col_ids_rows.resize(tmp_pat.end_row_id-tmp_pat.start_row_id);        
+        tmp_pat.col_ids_row.resize(tmp_pat.end_row_id-tmp_pat.start_row_id);        
         for(int ri=tmp_pat.start_row_id; ri<tmp_pat.end_row_id; ri++)
         {
             // index the col_ids_rows accordingly
-            get_fixed_sparse_idx(ri, tmp_pat.col_ids_rows[ri-tmp_pat.start_row_id], set_total_col_ids, context_l);
+            get_fixed_sparse_idx(ri, tmp_pat.col_ids_row[ri-tmp_pat.start_row_id], set_total_col_ids, context_l);
         }
-    }
-    else
-    {
-        std::throw runtime_error("Invalid Pattern");
     }
     // TODO: sort it before returning?
     tmp_pat.col_ids.assign(set_total_col_ids.begin(), set_total_col_ids.end());
-    tmp_pat.col_ids.sort();
+    sort(tmp_pat.col_ids.begin(), tmp_pat.col_ids.end());
 }
 
 // ********************* I/O *****************************
@@ -218,7 +208,7 @@ int read_data(double* data, int num, int dim, string filename){
     }
     for(int i=0; i<num; i++){
         for(int j=0; j<dim; j++){
-            fscanf(fp, "%lf", &data[i*dim+j]);
+            fscanf(fp, "%lf", data+i*dim+j);
         }
     }
     fclose(fp);
