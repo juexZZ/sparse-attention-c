@@ -22,6 +22,12 @@ int main(int argc, char* argv[]){
     int context_l = 64; // paper l
     int fixed_c = 0; // paper c
     int num_procs, my_rank;
+    int sizeof_double, sizeof_int;
+
+    MPI_Type_size(MPI_DOUBLE, &sizeof_double);
+    MPI_Type_size(MPI_INT, &sizeof_int);
+    long total_comm=0;
+
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -124,6 +130,11 @@ int main(int argc, char* argv[]){
         MPI_Gather(&row_size_back, 1, MPI_INT, row_sizes_back, 1, MPI_INT, 0, MPI_COMM_WORLD);        
         MPI_Gather(&front_off, 1, MPI_INT, displs_front, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Gather(&back_off, 1, MPI_INT, displs_back, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        if (my_rank==0)
+        {
+            total_comm+=(num_procs-1)*4*sizeof_int;
+        }        
+        
         for (size_t i = 0; i < num_procs; i++)
         {
             sendcounts_front[i]=row_sizes_front[i]*d;
@@ -131,6 +142,13 @@ int main(int argc, char* argv[]){
         }
         MPI_Scatterv(query, sendcounts_front, displs_front, MPI_DOUBLE, part_query, sendcount_front, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Scatterv(query, sendcounts_back, displs_back, MPI_DOUBLE, part_query_back, sendcount_back, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        if (my_rank==0)
+        {
+            for (size_t i = 1; i < num_procs; i++)
+            {
+                total_comm+=(sendcounts_front[i]+sendcounts_back[i])*sizeof_double;
+            }            
+        }
         delete[] sendcounts_front;
         delete[] sendcounts_back;
     }
@@ -150,6 +168,10 @@ int main(int argc, char* argv[]){
         int* col_sizes= new int[num_procs];
         int col_size=pattern_proc.col_ids.size();
         MPI_Gather(&col_size,1,MPI_INT,col_sizes,1,MPI_INT,0,MPI_COMM_WORLD);
+        if (my_rank==0)
+        {
+            total_comm+=(num_procs-1)*sizeof_int;
+        }
         int** col_to_send;
         int* mpi_col_to_send;
         int total_cols=0;
@@ -170,7 +192,15 @@ int main(int argc, char* argv[]){
             offsets[i]=offsets[i-1]+col_sizes[i-1];
         }
               
-        MPI_Gatherv(pattern_proc.col_ids.data(), col_size, MPI_INT, mpi_col_to_send, sendcounts, offsets.data(), MPI_INT, 0, MPI_COMM_WORLD);        
+        MPI_Gatherv(pattern_proc.col_ids.data(), col_size, MPI_INT, mpi_col_to_send, sendcounts, offsets.data(), MPI_INT, 0, MPI_COMM_WORLD); 
+        if (my_rank==0)
+        {
+            for (size_t i = 1; i < num_procs; i++)
+            {
+                total_comm+=sendcounts[i]*sizeof_int;
+            }
+        }
+               
         if (my_rank==0)
         {
             int offset=0;
@@ -223,6 +253,10 @@ int main(int argc, char* argv[]){
                 MPI_Request_free(&request_out1[i]);
                 MPI_Request_free(&request_out2[i]);
             }
+            for (size_t i = 1; i < num_procs; i++)
+            {
+                 total_comm+=2*col_sizes[i]*d*sizeof_double;
+            }
         }        
 
     }
@@ -274,6 +308,13 @@ int main(int argc, char* argv[]){
         // idspls only significant to the root
         MPI_Gatherv(part_result.data(), sendcount_front, MPI_DOUBLE, result_1d, sendcounts_front, displs_front, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Gatherv(part_result.data()+sendcount_front, sendcount_back, MPI_DOUBLE, result_1d, sendcounts_back, displs_back, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        if (my_rank==0)
+        {
+            for (size_t i = 1; i < num_procs; i++)
+            {
+                total_comm+=(sendcounts_front[i]+sendcounts_back[i])*sizeof_double;
+            }            
+        }
         delete[] sendcounts_front;
         delete[] sendcounts_back;
     }
@@ -283,6 +324,8 @@ int main(int argc, char* argv[]){
     double total_time=MPI_Wtime();
     std::cout<<"Total time "<<total_time-init_time<<std::endl;
 
+    if (!my_rank) printf("Total message size: %e GB\n", 1.0*total_comm/1e9);    
+    
     
     // save_data(result_1d, N, d, "data/"+data_dir+"/result.txt");
     // free attn_w
