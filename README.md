@@ -10,8 +10,11 @@ python and numpy is required to `data_gen.py`. For example:
 python data_gen.py 100 10 random
 python data_gen.py 100 10 ordered
 ```
-
 data will be stored as `query.txt`, `key.txt` and `value.txt` respectively.
+
+### Module
+module load gcc/10.2.0  
+module load openmpi/gcc/4.0.5 
 
 ### Todo list
 
@@ -28,8 +31,6 @@ key, dicided by the sparse pattern and proc_id, union
 
 ### 05/11/2023
 
-Yiwei: Might need to combine First SparsePattern and Last SparsePattern to avoid repeat
-
 - [ ] ~Juexiao: Modify the function to work with class SparsePattern and struct Id_vec~
 - [X] Juexiao: Attention x Value
 - [X] Yiwei: `main.cpp` line 91 double 2-d array change to 1-d, using total_count as index offset
@@ -38,6 +39,7 @@ Env: _conda deactivate_
 Compile: _make_ or _mpicxx -std=c++11 -O3 -march=native main.cpp -o main_    
 Compile openmp:  _mpicxx -std=c++11 -O3 -march=native main.cpp -fopenmp -o main_  
 Run: _mpirun -np <mpi_num> ./main <data_dir>_   
-e.g. _mpirun -np 2 ./main n32d8_
+e.g. _mpirun -np 2 ./main n32d8_  
+
 
 

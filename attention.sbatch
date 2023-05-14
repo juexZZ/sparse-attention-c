@@ -15,4 +15,3 @@ module load openmpi/gcc/4.0.5
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export OMP_THREAD_LIMIT=$SLURM_CPUS_PER_TASK
 mpiexec ./main n8192d512
-
