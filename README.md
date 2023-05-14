@@ -36,4 +36,4 @@ Yiwei: Might need to combine First SparsePattern and Last SparsePattern to avoid
 
 Env: _conda deactivate_
 Compile: _make_ or _mpicxx -std=c++11 -O3 -march=native main.cpp -o main_
-Run: _mpirun -np 2 ./main_
+Run: _mpirun -np <mpi_num> ./main <data_dir>_ e.g. _mpirun -np 2 ./main n32d8_

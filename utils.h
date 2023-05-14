@@ -7,7 +7,43 @@
 #include <string>
 #include <algorithm>
 using namespace std;
+#include <exception>
 
+template <typename T>
+T** create2DArray(unsigned nrows, unsigned ncols, const T& val = T())
+{
+   if (nrows == 0)
+        throw std::invalid_argument("number of rows is 0");
+   if (ncols == 0)
+        throw std::invalid_argument("number of columns is 0");
+   T** ptr = nullptr;
+   T* pool = nullptr;
+   try
+   {
+       ptr = new T*[nrows];  // allocate pointers (can throw here)
+       pool = new T[nrows*ncols]{val};  // allocate pool (can throw here)
+
+       // now point the row pointers to the appropriate positions in
+       // the memory pool
+       for (unsigned i = 0; i < nrows; ++i, pool += ncols )
+           ptr[i] = pool;
+
+       // Done.
+       return ptr;
+   }
+   catch (std::bad_alloc& ex)
+   {
+       delete [] ptr; // either this is nullptr or it was allocated
+       throw ex;  // memory allocation error
+   }
+}
+
+template <typename T>
+void delete2DArray(T** arr)
+{
+   delete [] arr[0];  // remove the pool
+   delete [] arr;     // remove the pointers
+}
 class SparsePattern
 {
     public:
@@ -234,6 +270,28 @@ int read_data(double* data, int num, int dim, string filename){
         for(int j=0; j<dim; j++){
             fscanf(fp, "%lf", data+i*dim+j);
         }
+    }
+    fclose(fp);
+    return 0;
+}
+
+int save_data(double* data,int num, int dim, string filename){
+    // save data to file
+    // data: the data to be saved
+    // num: number of rows
+    // dim: dimension of each row
+    // filename: the file name to be saved
+    // return 0 if success, -1 if fail
+    FILE* fp = fopen(filename.c_str(), "w");
+    if(fp == NULL){
+        printf("Error: cannot open file %s\n", filename.c_str());
+        return -1;
+    }
+    for(int i=0; i<num; i++){
+        for(int j=0; j<dim; j++){
+            fprintf(fp, "%lf\t", data[i*dim+j]);
+        }
+        fprintf(fp, "\n");
     }
     fclose(fp);
     return 0;
