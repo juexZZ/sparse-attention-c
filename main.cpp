@@ -11,8 +11,6 @@
 #endif
 #include "utils.h"
 #include <unistd.h>
-#include <regex>
-
 
 using namespace std;
 
@@ -42,6 +40,11 @@ int main(int argc, char* argv[]){
         std::cout<<"d: "<<d<<endl;
         std::cout<<"threads: "<<threads<<endl;
     }
+    if (my_rank==0)
+    {
+        std::cout<<data_dir<<endl;
+    }
+
 // #ifdef _OPENMP
 //     omp_set_num_threads(threads);
 // #endif
