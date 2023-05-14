@@ -22,5 +22,6 @@ export OMP_THREAD_LIMIT=\$SLURM_CPUS_PER_TASK
 mpiexec ./main n8192d512
 EOF
     sbatch n${n}_t${t}.sbatch
+    rm n${n}_t${t}.sbatch
     done
 done
