@@ -231,7 +231,7 @@ int main(int argc, char* argv[]){
        std::cout<<"key value communication done"<<std::endl;  
     }
     double comm_time=MPI_Wtime();
-    std::cout<<"Communication time "<<comm_time-init_time<<std::endl;
+    std::cout<<"Scatter data time "<<comm_time-init_time<<std::endl;
     
     // sparse attention
     double** attn_w = new double*[pattern_proc.get_rows()];
@@ -256,6 +256,8 @@ int main(int argc, char* argv[]){
     attn_weight_value(attn_w, part_val, part_result, pattern_proc);
     // attn_weight_value(attn_w_last, part_val_last, result_last, pattern_last);
     //communicate results, just gather
+    double cal_time=MPI_Wtime();
+    std::cout<<"Calculation time "<<cal_time-comm_time<<std::endl;
     if (is_debug)
     {
        std::cout<<"attention done"<<std::endl;  
@@ -275,8 +277,12 @@ int main(int argc, char* argv[]){
         delete[] sendcounts_front;
         delete[] sendcounts_back;
     }
-    double cal_time=MPI_Wtime();
-    std::cout<<"Calculation time "<<cal_time-comm_time<<std::endl;
+    double result_time=MPI_Wtime();
+    std::cout<<"Gather result time "<<result_time-cal_time<<std::endl;
+
+    double total_time=MPI_Wtime();
+    std::cout<<"Total time "<<total_time-init_time<<std::endl;
+
     
     // save_data(result_1d, N, d, "data/"+data_dir+"/result.txt");
     // free attn_w
