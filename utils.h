@@ -137,7 +137,6 @@ void row_sparse_attention(double* query, double* keys, double* res, SparsePatter
     // predefine num and obtain Vs according to sparse indexes
     int num = pattern.col_ids_row[r].size();
     int dim = pattern.d;
-    #pragma omp parallel for 
     for(int i=0; i<num; i++){
         int global_col_idx = pattern.col_ids_row[r][i];
         int local_col_idx = pattern.inverse_col_ids[global_col_idx];

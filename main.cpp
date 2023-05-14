@@ -238,7 +238,7 @@ int main(int argc, char* argv[]){
     // double** attn_w_first = new double*[pattern_first.get_rows()];
     // double** attn_w_last = new double*[pattern_last.get_rows()];
 
-    
+    #pragma omp parallel for 
     for(int r=0; r<pattern_proc.get_rows(); r++){
         attn_w[r] = new double[pattern_proc.col_ids_row[r].size()];
         row_sparse_attention(part_query+r*d, part_key, attn_w[r], pattern_proc, r);
