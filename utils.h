@@ -101,6 +101,7 @@ void row_sparse_attention(double* query, double* keys, double* res, SparsePatter
     // predefine num and obtain Vs according to sparse indexes
     int num = pattern.col_ids_row[r].size();
     int dim = pattern.d;
+    #pragma omp parallel for 
     for(int i=0; i<num; i++){
         int global_col_idx = pattern.col_ids_row[r][i];
         int local_col_idx = pattern.inverse_col_ids[global_col_idx];
@@ -129,6 +130,7 @@ void row_attn_weight_value(double* attn_w_row, double* value,
 
 void attn_weight_value(double** attn_w, double* value, vector<double>& res, SparsePattern& pattern){
     int row_size = pattern.get_rows();
+    #pragma omp parallel for
     for(int ri=0; ri<row_size; ri++){
         // int row_id = pattern.start_row_id + ri;
         row_attn_weight_value(attn_w[ri], value, ri*pattern.d, res, pattern.col_ids_row[ri], pattern.inverse_col_ids, pattern.d);

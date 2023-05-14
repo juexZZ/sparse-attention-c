@@ -24,6 +24,9 @@ int main(int argc, char* argv[]){
     string query_file = "query.txt";
     string key_file = "key.txt";
     string value_file = "value.txt";
+#ifdef _OPENMP
+    omp_set_num_threads(4);
+#endif
     int num_procs, my_rank;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
@@ -56,6 +59,7 @@ int main(int argc, char* argv[]){
         read_data(value, N, d, value_file);
         
     }
+    double init_time=MPI_Wtime();
     int row_size=pattern_proc.get_rows();
     // double part_query_first[row_size*d];
     // double part_query_last[row_size*d];
@@ -83,21 +87,11 @@ int main(int argc, char* argv[]){
             sendcounts_front[i]=row_sizes_front[i]*d;
             sendcounts_back[i] = row_sizes_back[i]*d;
         }
-        if (my_rank==0)
-        {
-            for (size_t i = 0; i < num_procs; i++)
-            {
-                std::cout<<"row_sizes_front "<<row_sizes_front[i]<<std::endl;
-                std::cout<<"row_sizes_back "<<row_sizes_back[i]<<std::endl;
-            }           
-        }
-        
         MPI_Scatterv(query, sendcounts_front, displs_front, MPI_DOUBLE, part_query, sendcount_front, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Scatterv(query, sendcounts_back, displs_back, MPI_DOUBLE, part_query_back, sendcount_back, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         delete[] sendcounts_front;
         delete[] sendcounts_back;
     }
-    std::cout<<"Scatter query done "<<my_rank<<std::endl;
     //For key communication
     double* part_key = new double[pattern_proc.col_ids.size()*d];
     double* part_val = new double[pattern_proc.col_ids.size()*d];
@@ -131,7 +125,6 @@ int main(int argc, char* argv[]){
         }
               
         MPI_Gatherv(pattern_proc.col_ids.data(), col_size, MPI_INT, mpi_col_to_send, sendcounts, offsets.data(), MPI_INT, 0, MPI_COMM_WORLD);
-        std::cout<<"Gather key done"<<std::endl;
         if (my_rank==0)
         {
             int offset=0;
@@ -144,7 +137,6 @@ int main(int argc, char* argv[]){
                 offset+=col_sizes[i];
             }
             delete[] mpi_col_to_send;
-            std::cout<<"offset"<<std::endl;
         }
         MPI_Status status;
         MPI_Request request_out1, request_in1;
@@ -166,13 +158,13 @@ int main(int argc, char* argv[]){
                 }
                 MPI_Isend(tmp_key, col_sizes[i]*d, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &request_out1);
                 MPI_Isend(tmp_val, col_sizes[i]*d, MPI_DOUBLE, i, 1, MPI_COMM_WORLD, &request_out2);
-                std::cout<<"send "<<my_rank<<std::endl;    
             }
         }
         MPI_Recv(part_key, col_size*d, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-        MPI_Recv(part_val, col_size*d, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD,MPI_STATUS_IGNORE); 
-        std::cout<<"recv "<<my_rank<<std::endl;       
+        MPI_Recv(part_val, col_size*d, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD,MPI_STATUS_IGNORE);      
     }
+    double comm_time=MPI_Wtime();
+    std::cout<<"Communication time "<<comm_time-init_time<<std::endl;
     
     // sparse attention
     double** attn_w = new double*[pattern_proc.get_rows()];
@@ -197,7 +189,6 @@ int main(int argc, char* argv[]){
     attn_weight_value(attn_w, part_val, part_result, pattern_proc);
     // attn_weight_value(attn_w_last, part_val_last, result_last, pattern_last);
     //communicate results, just gather
-    // TODO
     double result[N][d];
     {
         int* sendcounts_front= new int[num_procs];
@@ -210,10 +201,11 @@ int main(int argc, char* argv[]){
         // idspls only significant to the root
         MPI_Gatherv(part_result.data(), sendcount_front, MPI_DOUBLE, result, sendcounts_front, displs_front, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Gatherv(part_result.data()+sendcount_front, sendcount_back, MPI_DOUBLE, result, sendcounts_back, displs_back, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        std::cout<<"collect result "<<my_rank<<std::endl;
         delete[] sendcounts_front;
         delete[] sendcounts_back;
     }
+    double cal_time=MPI_Wtime();
+    std::cout<<"Calculation time "<<cal_time-comm_time<<std::endl;
     // free attn_w
     for(int r=0; r<pattern_proc.get_rows(); r++){
         delete[] attn_w[r];
