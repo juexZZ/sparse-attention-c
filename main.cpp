@@ -21,14 +21,14 @@ int main(int argc, char* argv[]){
     int threads=4;
     int N = 32;
     int d = 8;
-    int context_l = 256; // paper l
+    int context_l = 64; // paper l
     int fixed_c = 0; // paper c
     int num_procs, my_rank;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    threads=atoi(argv[2]);
     string data_dir=argv[1];
+    // threads=atoi(argv[2]);
     string query_file = "data/"+data_dir+"/query.txt";
     string key_file = "data/"+data_dir+"/key.txt";
     string value_file = "data/"+data_dir+"/value.txt";
@@ -36,15 +36,15 @@ int main(int argc, char* argv[]){
     std::size_t d_found=data_dir.find("d");
     N=stoi(data_dir.substr(n_found+1,d_found-n_found-1));
     d=stoi(data_dir.substr(d_found+1));
-    bool is_debug=true;
+    bool is_debug=false;
     if(is_debug){
         std::cout<<"N: "<<N<<endl;
         std::cout<<"d: "<<d<<endl;
         std::cout<<"threads: "<<threads<<endl;
     }
-#ifdef _OPENMP
-    omp_set_num_threads(threads);
-#endif
+// #ifdef _OPENMP
+//     omp_set_num_threads(threads);
+// #endif
     // read data and distribute to other processes
     // each process hold: part_query_first, part_key_first, part_value_first, part_query_last, part_key_last, part_value_last
     // to keep thread load balanced
@@ -163,7 +163,7 @@ int main(int argc, char* argv[]){
             offsets[i]=offsets[i-1]+col_sizes[i-1];
         }
               
-        MPI_Gatherv(pattern_proc.col_ids.data(), col_size, MPI_INT, mpi_col_to_send, sendcounts, offsets.data(), MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(pattern_proc.col_ids.data(), col_size, MPI_INT, mpi_col_to_send, sendcounts, offsets.data(), MPI_INT, 0, MPI_COMM_WORLD);        
         if (my_rank==0)
         {
             int offset=0;
@@ -180,12 +180,18 @@ int main(int argc, char* argv[]){
         MPI_Status status;
         MPI_Request request_out1, request_in1;
         MPI_Request request_out2, request_in2;
+        if (is_debug)
+        {
+            std::cout<<"col info communication done"<<std::endl;
+        }
         if (my_rank==0)
         {
             for (size_t i = 0; i < num_procs; i++)
             {
-                double tmp_key[col_sizes[i]][d];
-                double tmp_val[col_sizes[i]][d];
+                double **tmp_key;
+                double **tmp_val;
+                tmp_key=create2DArray<double>(col_sizes[i],d);
+                tmp_val=create2DArray<double>(col_sizes[i],d);
                 for (size_t j = 0; j < col_sizes[i]; j++)
                 {
                     for (size_t k = 0; k < d; k++)
@@ -195,8 +201,10 @@ int main(int argc, char* argv[]){
                     }
                     
                 }
-                MPI_Isend(tmp_key, col_sizes[i]*d, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &request_out1);
-                MPI_Isend(tmp_val, col_sizes[i]*d, MPI_DOUBLE, i, 1, MPI_COMM_WORLD, &request_out2);
+                double *send_key=reinterpret_cast<double *>(&tmp_key[0][0]);
+                double *send_val=reinterpret_cast<double *>(&tmp_val[0][0]);
+                MPI_Isend(send_key, col_sizes[i]*d, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &request_out1);
+                MPI_Isend(send_val, col_sizes[i]*d, MPI_DOUBLE, i, 1, MPI_COMM_WORLD, &request_out2);
             }
         }
         MPI_Recv(part_key, col_size*d, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
@@ -236,7 +244,7 @@ int main(int argc, char* argv[]){
     {
        std::cout<<"attention done"<<std::endl;  
     }
-    double result[N][d];
+    double *result_1d = new double[N*d];
     {
         int* sendcounts_front= new int[num_procs];
         int* sendcounts_back = new int[num_procs];
@@ -246,15 +254,15 @@ int main(int argc, char* argv[]){
             sendcounts_back[i] =row_sizes_back[i]*d;
         }
         // idspls only significant to the root
-        MPI_Gatherv(part_result.data(), sendcount_front, MPI_DOUBLE, result, sendcounts_front, displs_front, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Gatherv(part_result.data()+sendcount_front, sendcount_back, MPI_DOUBLE, result, sendcounts_back, displs_back, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(part_result.data(), sendcount_front, MPI_DOUBLE, result_1d, sendcounts_front, displs_front, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(part_result.data()+sendcount_front, sendcount_back, MPI_DOUBLE, result_1d, sendcounts_back, displs_back, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         delete[] sendcounts_front;
         delete[] sendcounts_back;
     }
     double cal_time=MPI_Wtime();
     std::cout<<"Calculation time "<<cal_time-comm_time<<std::endl;
-    double *result_1d = reinterpret_cast<double *>(result);
-    save_data(result_1d, N, d, "data/"+data_dir+"result.txt");
+    
+    save_data(result_1d, N, d, "data/"+data_dir+"/result.txt");
     // free attn_w
     for(int r=0; r<pattern_proc.get_rows(); r++){
         delete[] attn_w[r];
