@@ -44,6 +44,10 @@ int main(int argc, char* argv[]){
     {
         std::cout<<data_dir<<endl;
     }
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    int name_len;
+    MPI_Get_processor_name(processor_name, &name_len);
+    printf("Rank %d/%d running on %s.\n", my_rank, num_procs, processor_name);
 
 // #ifdef _OPENMP
 //     omp_set_num_threads(threads);
@@ -181,8 +185,8 @@ int main(int argc, char* argv[]){
             delete[] mpi_col_to_send;
         }
         MPI_Status status;
-        MPI_Request request_out1, request_in1;
-        MPI_Request request_out2, request_in2;
+        MPI_Request request_out1[num_procs];
+        MPI_Request request_out2[num_procs];
         if (is_debug)
         {
             std::cout<<"col info communication done"<<std::endl;
@@ -206,12 +210,21 @@ int main(int argc, char* argv[]){
                 }
                 double *send_key=reinterpret_cast<double *>(&tmp_key[0][0]);
                 double *send_val=reinterpret_cast<double *>(&tmp_val[0][0]);
-                MPI_Isend(send_key, col_sizes[i]*d, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &request_out1);
-                MPI_Isend(send_val, col_sizes[i]*d, MPI_DOUBLE, i, 1, MPI_COMM_WORLD, &request_out2);
+                MPI_Isend(send_key, col_sizes[i]*d, MPI_DOUBLE, i, 2*i, MPI_COMM_WORLD, &request_out1[i]);
+                MPI_Isend(send_val, col_sizes[i]*d, MPI_DOUBLE, i, 2*i+1, MPI_COMM_WORLD, &request_out2[i]);
             }
         }
-        MPI_Recv(part_key, col_size*d, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-        MPI_Recv(part_val, col_size*d, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD,MPI_STATUS_IGNORE);      
+        MPI_Recv(part_key, col_size*d, MPI_DOUBLE, 0, 2*my_rank, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+        MPI_Recv(part_val, col_size*d, MPI_DOUBLE, 0, 2*my_rank+1, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+        if (my_rank==0)
+        {
+            for (size_t i = 0; i < num_procs; i++)
+            {
+                MPI_Request_free(&request_out1[i]);
+                MPI_Request_free(&request_out2[i]);
+            }
+        }        
+
     }
     if (is_debug)
     {
@@ -270,6 +283,7 @@ int main(int argc, char* argv[]){
     for(int r=0; r<pattern_proc.get_rows(); r++){
         delete[] attn_w[r];
     }
+    
     delete[] attn_w;
     // free the rest
     delete[] part_key;
