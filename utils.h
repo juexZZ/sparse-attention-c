@@ -140,7 +140,7 @@ void get_fixed_sparse_idx(int row_id, vector<int>& col_ids, set<int>& set_total_
     // row_id: the row id (starting from 0)
     // col_ids: the column ids of the non zero elements
     int m = (int)(row_id+1)/l;
-    for(int idx = 1; idx <= row_id+1; idx++){
+    for(int idx = 1; idx < row_id+1; idx++){
         if((int)idx/l == m){ // pattern A1 in the paper
             col_ids.push_back(idx-1);
             set_total_col_ids.insert(idx-1);
@@ -150,6 +150,8 @@ void get_fixed_sparse_idx(int row_id, vector<int>& col_ids, set<int>& set_total_
             set_total_col_ids.insert(idx-1);
         }
     }
+    col_ids.push_back(row_id); // must have the diagonal element
+    set_total_col_ids.insert(row_id);
 }
 
 void get_strided_sparse_idx(int row_id, vector<int>& col_ids, set<int>& set_total_col_ids, int l){
@@ -157,7 +159,7 @@ void get_strided_sparse_idx(int row_id, vector<int>& col_ids, set<int>& set_tota
     // row_id: the row id (starting from 0)
     // col_ids: the column ids of the non zero elements
     // c: the context window
-    for(int idx = 1; idx <= row_id+1; idx++){
+    for(int idx = 1; idx < row_id+1; idx++){
         if((row_id - idx)%l == 0 ){ // pattern A2 in the paper
             col_ids.push_back(idx-1);
             set_total_col_ids.insert(idx-1);
@@ -166,8 +168,9 @@ void get_strided_sparse_idx(int row_id, vector<int>& col_ids, set<int>& set_tota
             col_ids.push_back(idx-1);
             set_total_col_ids.insert(idx-1);
         }
-        
     }
+    col_ids.push_back(row_id); // must have the diagonal element
+    set_total_col_ids.insert(row_id);
 }
 
 void get_row_share(int rank, int num_procs, int N, SparsePattern& pattern_proc){
