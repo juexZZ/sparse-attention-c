@@ -24,13 +24,14 @@ int main(int argc, char* argv[]){
     int num_procs, my_rank;
     int sizeof_double, sizeof_int;
 
-    MPI_Type_size(MPI_DOUBLE, &sizeof_double);
-    MPI_Type_size(MPI_INT, &sizeof_int);
-    long total_comm=0;
-
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    MPI_Type_size(MPI_DOUBLE, &sizeof_double);
+    MPI_Type_size(MPI_INT, &sizeof_int);
+    long total_comm=0;
+    
     string data_dir=argv[1];
     // threads=atoi(argv[2]);
     string query_file = "data/"+data_dir+"/query.txt";
