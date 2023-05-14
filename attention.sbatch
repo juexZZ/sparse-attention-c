@@ -11,8 +11,6 @@
 
 module purge 
 module load openmpi/gcc/4.0.5 
-
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 mpiexec ./main n8192d512
-mpiexec ./main n8192d128
-mpiexec ./main n1024d32
 

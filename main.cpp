@@ -278,7 +278,7 @@ int main(int argc, char* argv[]){
     double cal_time=MPI_Wtime();
     std::cout<<"Calculation time "<<cal_time-comm_time<<std::endl;
     
-    save_data(result_1d, N, d, "data/"+data_dir+"/result.txt");
+    // save_data(result_1d, N, d, "data/"+data_dir+"/result.txt");
     // free attn_w
     for(int r=0; r<pattern_proc.get_rows(); r++){
         delete[] attn_w[r];
