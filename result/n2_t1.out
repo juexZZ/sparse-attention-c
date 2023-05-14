@@ -1,0 +1,12 @@
+n8192d512
+Rank 0/2 running on cs498.hpc.nyu.edu.
+Rank 1/2 running on cs499.hpc.nyu.edu.
+Scatter data time 0.111252
+Scatter data time 2.20945
+Calculation time 0.302273
+Calculation time 0.307132
+Gather result time 0.0172553
+Total time 0.435667
+Total message size: 7.582517e-02 GB
+Gather result time 0.0234682
+Total time 2.53522

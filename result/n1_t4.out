@@ -1,0 +1,7 @@
+n8192d512
+Rank 0/1 running on gr013.hpc.nyu.edu.
+Scatter data time 0.0997697
+Calculation time 0.598038
+Gather result time 0.0180657
+Total time 0.715893
+Total message size: 0.000000e+00 GB
