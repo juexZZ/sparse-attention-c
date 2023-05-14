@@ -34,6 +34,10 @@ Yiwei: Might need to combine First SparsePattern and Last SparsePattern to avoid
 - [X] Juexiao: Attention x Value
 - [X] Yiwei: `main.cpp` line 91 double 2-d array change to 1-d, using total_count as index offset
 
-Env: _conda deactivate_
-Compile: _make_ or _mpicxx -std=c++11 -O3 -march=native main.cpp -o main_
-Run: _mpirun -np 2 ./main_
+Env: _conda deactivate_  
+Compile: _make_ or _mpicxx -std=c++11 -O3 -march=native main.cpp -o main_    
+Compile openmp:  _mpicxx -std=c++11 -O3 -march=native main.cpp -fopenmp -o main_  
+Run: _mpirun -np <mpi_num> ./main <data_dir>_   
+e.g. _mpirun -np 2 ./main n32d8_
+
+
