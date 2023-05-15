@@ -1,10 +1,7 @@
 n32768d1024
-Rank 0/1 running on cs059.hpc.nyu.edu.
---------------------------------------------------------------------------
-Primary job  terminated normally, but 1 process returned
-a non-zero exit code. Per user-direction, the job has been aborted.
---------------------------------------------------------------------------
---------------------------------------------------------------------------
-mpiexec noticed that process rank 0 with PID 2807247 on node cs059 exited on signal 9 (Killed).
---------------------------------------------------------------------------
-slurmstepd: error: Detected 1 oom-kill event(s) in StepId=33355030.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.
+Rank 0/1 running on gv006.hpc.nyu.edu.
+Scatter data time 0.804593
+Calculation time 14.8166
+Gather result time 0.139401
+Total time 15.7606
+Total message size: 0.000000e+00 GB

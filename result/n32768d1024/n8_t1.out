@@ -1,42 +1,42 @@
 n32768d1024
-Rank 0/8 running on cs166.hpc.nyu.edu.
-Rank 1/8 running on cs167.hpc.nyu.edu.
-Rank 7/8 running on cs173.hpc.nyu.edu.
-Rank 4/8 running on cs170.hpc.nyu.edu.
-Rank 5/8 running on cs171.hpc.nyu.edu.
-Rank 3/8 running on cs169.hpc.nyu.edu.
-Rank 6/8 running on cs172.hpc.nyu.edu.
-Rank 2/8 running on cs168.hpc.nyu.edu.
-Scatter data time 17.1679
-Scatter data time 17.1867
-Scatter data time 17.2556
-Scatter data time 17.3158
-Scatter data time 17.3553
-Scatter data time 17.4091
-Scatter data time 0.64699
-Scatter data time 17.4816
-Calculation time 1.82293
-Calculation time 1.79897
-Calculation time 1.80624
-Calculation time 1.81141
-Calculation time 1.83899
-Calculation time 1.83089
-Calculation time 1.80989
-Calculation time 1.86122
-Gather result time 0.419576
-Total time 19.4104
-Gather result time 0.397643
-Total time 19.3834
-Gather result time 0.344699
-Total time 19.4066
-Gather result time 0.295903
-Total time 19.4231
-Gather result time 0.223855
-Total time 19.4182
-Gather result time 0.188873
-Total time 19.4289
-Gather result time 0.108403
-Total time 2.61664
+Rank 0/8 running on cs438.hpc.nyu.edu.
+Rank 1/8 running on cs439.hpc.nyu.edu.
+Rank 6/8 running on cs473.hpc.nyu.edu.
+Rank 4/8 running on cs442.hpc.nyu.edu.
+Rank 2/8 running on cs440.hpc.nyu.edu.
+Rank 3/8 running on cs441.hpc.nyu.edu.
+Rank 5/8 running on cs443.hpc.nyu.edu.
+Rank 7/8 running on cs474.hpc.nyu.edu.
+Scatter data time 16.9237
+Scatter data time 16.977
+Scatter data time 17.0289
+Scatter data time 17.0808
+Scatter data time 17.1212
+Scatter data time 17.1783
+Scatter data time 0.620721
+Scatter data time 17.2299
+Calculation time 1.80014
+Calculation time 1.80498
+Calculation time 1.81219
+Calculation time 1.81454
+Calculation time 1.81148
+Calculation time 1.81257
+Calculation time 1.80672
+Calculation time 1.80816
+Gather result time 0.382871
+Total time 19.1068
+Gather result time 0.333771
+Total time 19.1157
+Gather result time 0.282807
+Total time 19.1239
+Gather result time 0.235044
+Total time 19.1304
+Gather result time 0.196187
+Total time 19.1289
+Gather result time 0.150708
+Total time 19.1416
+Gather result time 0.10966
+Total time 2.53712
 Total message size: 1.102840e+00 GB
-Gather result time 0.163049
-Total time 19.4545
+Gather result time 0.110056
+Total time 19.1482

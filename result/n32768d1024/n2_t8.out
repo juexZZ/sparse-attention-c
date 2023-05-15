@@ -1,15 +1,12 @@
+Rank 1/2 running on gv008.hpc.nyu.edu.
 n32768d1024
-Rank 0/2 running on gr005.hpc.nyu.edu.
-Rank 1/2 running on gr006.hpc.nyu.edu.
-Scatter data time 0.829144
-Scatter data time 17.53
-Calculation time 7.40244
-Calculation time 7.72692
---------------------------------------------------------------------------
-Primary job  terminated normally, but 1 process returned
-a non-zero exit code. Per user-direction, the job has been aborted.
---------------------------------------------------------------------------
---------------------------------------------------------------------------
-mpiexec noticed that process rank 0 with PID 0 on node gr005 exited on signal 9 (Killed).
---------------------------------------------------------------------------
-slurmstepd: error: Detected 1 oom-kill event(s) in StepId=33355037.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.
+Rank 0/2 running on gv007.hpc.nyu.edu.
+Scatter data time 17.1853
+Scatter data time 0.70025
+Calculation time 7.13003
+Calculation time 7.24362
+Gather result time 0.20163
+Total time 8.03193
+Total message size: 6.066012e-01 GB
+Gather result time 0.0926775
+Total time 24.5217
