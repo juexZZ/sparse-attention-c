@@ -1,0 +1,7 @@
+n8192d1024
+Rank 0/1 running on gr049.hpc.nyu.edu.
+Scatter data time 0.205228
+Calculation time 1.24423
+Gather result time 0.0349612
+Total time 1.48444
+Total message size: 0.000000e+00 GB

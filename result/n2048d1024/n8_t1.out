@@ -1,0 +1,42 @@
+n2048d1024
+Rank 0/8 running on cs096.hpc.nyu.edu.
+Rank 3/8 running on cs481.hpc.nyu.edu.
+Rank 4/8 running on cs482.hpc.nyu.edu.
+Rank 1/8 running on cs479.hpc.nyu.edu.
+Rank 7/8 running on cs485.hpc.nyu.edu.
+Rank 2/8 running on cs480.hpc.nyu.edu.
+Rank 6/8 running on cs484.hpc.nyu.edu.
+Rank 5/8 running on cs483.hpc.nyu.edu.
+Scatter data time 0.0328999
+Scatter data time 0.036438
+Calculation time 0.0190228
+Scatter data time 0.0398369
+Scatter data time 0.0434441
+Scatter data time 0.055423
+Scatter data time 0.0516598
+Calculation time 0.0190983
+Calculation time 0.0191489
+Calculation time 0.0192198
+Scatter data time 0.047373
+Scatter data time 0.0544607
+Calculation time 0.0200379
+Calculation time 0.0195147
+Calculation time 0.018721
+Calculation time 0.019649
+Gather result time 0.0288363
+Total time 0.0807666
+Gather result time 0.0255869
+Total time 0.0812565
+Gather result time 0.0226352
+Total time 0.081636
+Gather result time 0.0197533
+Total time 0.0823077
+Gather result time 0.0157106
+Total time 0.0827517
+Gather result time 0.0119872
+Total time 0.0831685
+Gather result time 0.00830819
+Total time 0.083796
+Total message size: 6.892763e-02 GB
+Gather result time 0.0103857
+Total time 0.0835779

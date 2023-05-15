@@ -1,0 +1,14 @@
+Rank 1/2 running on cs385.hpc.nyu.edu.
+n8192d512
+Rank 0/2 running on cs384.hpc.nyu.edu.
+Scatter data time 0.104705
+Scatter data time 0.102137
+Calculation time 0.296049
+Openmp calculation time 0.296019
+Calculation time 0.302636
+Openmp calculation time 0.302603
+Gather result time 0.0196074
+Total time 0.426975
+Total message size: 7.582517e-02 GB
+Gather result time 0.028716
+Total time 0.426919

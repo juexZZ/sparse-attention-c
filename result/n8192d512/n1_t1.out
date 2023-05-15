@@ -1,0 +1,8 @@
+n8192d512
+Rank 0/1 running on cs258.hpc.nyu.edu.
+Scatter data time 0.106818
+Calculation time 0.615191
+Openmp calculation time 0.615173
+Gather result time 0.0194499
+Total time 0.741504
+Total message size: 0.000000e+00 GB

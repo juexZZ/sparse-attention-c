@@ -1,0 +1,7 @@
+n32768d1024
+Rank 0/1 running on cs027.hpc.nyu.edu.
+Scatter data time 0.823228
+Calculation time 15.5496
+Gather result time 0.172789
+Total time 16.5456
+Total message size: 0.000000e+00 GB

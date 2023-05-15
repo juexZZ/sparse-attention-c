@@ -1,0 +1,7 @@
+n2048d1024
+Rank 0/1 running on gr035.hpc.nyu.edu.
+Scatter data time 0.0542378
+Calculation time 0.153489
+Gather result time 0.00900716
+Total time 0.216754
+Total message size: 0.000000e+00 GB

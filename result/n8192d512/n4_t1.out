@@ -1,0 +1,26 @@
+n8192d512
+Rank 0/4 running on cs473.hpc.nyu.edu.
+Rank 3/4 running on cs476.hpc.nyu.edu.
+Rank 1/4 running on cs474.hpc.nyu.edu.
+Rank 2/4 running on cs475.hpc.nyu.edu.
+Scatter data time 0.0615434
+Scatter data time 0.0732532
+Scatter data time 0.0866921
+Scatter data time 0.0846041
+Calculation time 0.148017
+Openmp calculation time 0.148
+Calculation time 0.143414
+Openmp calculation time 0.143381
+Calculation time 0.142906
+Openmp calculation time 0.142872
+Calculation time 0.148581
+Openmp calculation time 0.148553
+Gather result time 0.0374926
+Total time 0.247069
+Gather result time 0.0322562
+Total time 0.248938
+Gather result time 0.0154594
+Total time 0.250755
+Total message size: 1.152123e-01 GB
+Gather result time 0.0231326
+Total time 0.250654

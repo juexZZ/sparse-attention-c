@@ -1,0 +1,12 @@
+n8192d1024
+Rank 0/2 running on gr043.hpc.nyu.edu.
+Rank 1/2 running on gr044.hpc.nyu.edu.
+Scatter data time 0.141944
+Scatter data time 0.142716
+Calculation time 0.607285
+Calculation time 0.620082
+Gather result time 0.0287111
+Total time 0.790758
+Total message size: 1.516503e-01 GB
+Gather result time 0.0406976
+Total time 0.79071

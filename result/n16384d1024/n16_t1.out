@@ -1,0 +1,82 @@
+n16384d1024
+Rank 0/16 running on cs222.hpc.nyu.edu.
+Rank 11/16 running on cs391.hpc.nyu.edu.
+Rank 10/16 running on cs390.hpc.nyu.edu.
+Rank 1/16 running on cs223.hpc.nyu.edu.
+Rank 12/16 running on cs392.hpc.nyu.edu.
+Rank 15/16 running on cs395.hpc.nyu.edu.
+Rank 9/16 running on cs389.hpc.nyu.edu.
+Rank 7/16 running on cs229.hpc.nyu.edu.
+Rank 13/16 running on cs393.hpc.nyu.edu.
+Rank 2/16 running on cs224.hpc.nyu.edu.
+Rank 6/16 running on cs228.hpc.nyu.edu.
+Rank 5/16 running on cs227.hpc.nyu.edu.
+Rank 3/16 running on cs225.hpc.nyu.edu.
+Rank 4/16 running on cs226.hpc.nyu.edu.
+Rank 8/16 running on cs388.hpc.nyu.edu.
+Rank 14/16 running on cs394.hpc.nyu.edu.
+Scatter data time 0.197878
+Scatter data time 0.212712
+Scatter data time 0.22783
+Scatter data time 0.242024
+Scatter data time 0.257297
+Scatter data time 0.271435
+Scatter data time 0.286515
+Scatter data time 0.300354
+Scatter data time 0.314992
+Scatter data time 0.327814
+Scatter data time 0.340575
+Scatter data time 0.354284
+Scatter data time 0.366464
+Scatter data time 0.381109
+Scatter data time 0.394659
+Scatter data time 0.392558
+Calculation time 0.25214
+Calculation time 0.256176
+Calculation time 0.254924
+Calculation time 0.251075
+Calculation time 0.255578
+Calculation time 0.253748
+Calculation time 0.258314
+Calculation time 0.253673
+Calculation time 0.259745
+Calculation time 0.259885
+Calculation time 0.258873
+Calculation time 0.255146
+Calculation time 0.255106
+Calculation time 0.257216
+Calculation time 0.262944
+Calculation time 0.279041
+Gather result time 0.234002
+Total time 0.684037
+Gather result time 0.216853
+Total time 0.685758
+Gather result time 0.204598
+Total time 0.687375
+Gather result time 0.196146
+Total time 0.689266
+Gather result time 0.177915
+Total time 0.690809
+Gather result time 0.167331
+Total time 0.692535
+Gather result time 0.149449
+Total time 0.694303
+Gather result time 0.14235
+Total time 0.696397
+Gather result time 0.123196
+Total time 0.697986
+Gather result time 0.112207
+Total time 0.699929
+Gather result time 0.102027
+Total time 0.701491
+Gather result time 0.0938721
+Total time 0.703324
+Gather result time 0.0832477
+Total time 0.704907
+Gather result time 0.0466054
+Total time 0.70678
+Gather result time 0.0568501
+Total time 0.708746
+Total message size: 6.202985e-01 GB
+Gather result time 0.052791
+Total time 0.708307

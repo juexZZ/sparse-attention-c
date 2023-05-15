@@ -1,0 +1,12 @@
+n2048d1024
+Rank 0/2 running on gr005.hpc.nyu.edu.
+Rank 1/2 running on gr006.hpc.nyu.edu.
+Scatter data time 0.0505272
+Scatter data time 0.0492204
+Calculation time 0.0758021
+Calculation time 0.0766763
+Gather result time 0.00781953
+Total time 0.135047
+Total message size: 3.791260e-02 GB
+Gather result time 0.0100038
+Total time 0.135033
