@@ -1,7 +1,7 @@
 n32768d1024
-Rank 0/1 running on gv007.hpc.nyu.edu.
-Scatter data time 0.87814
-Calculation time 14.5767
-Gather result time 0.140131
-Total time 15.5949
+Rank 0/1 running on cs021.hpc.nyu.edu.
+Scatter data time 0.740747
+Calculation time 17.4126
+Gather result time 0.131881
+Total time 18.2853
 Total message size: 0.000000e+00 GB

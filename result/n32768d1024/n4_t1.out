@@ -1,22 +1,22 @@
 n32768d1024
-Rank 0/4 running on cs034.hpc.nyu.edu.
-Rank 3/4 running on cs483.hpc.nyu.edu.
-Rank 2/4 running on cs482.hpc.nyu.edu.
-Rank 1/4 running on cs481.hpc.nyu.edu.
-Scatter data time 16.6924
-Scatter data time 16.7984
-Scatter data time 0.635368
-Scatter data time 16.9101
-Calculation time 3.69578
-Calculation time 3.63565
-Calculation time 3.5822
-Calculation time 3.75461
-Gather result time 0.301165
-Total time 20.6894
-Gather result time 0.28298
-Total time 20.717
-Gather result time 0.245352
-Total time 4.46294
+Rank 0/4 running on cs473.hpc.nyu.edu.
+Rank 3/4 running on cs476.hpc.nyu.edu.
+Rank 1/4 running on cs474.hpc.nyu.edu.
+Rank 2/4 running on cs475.hpc.nyu.edu.
+Scatter data time 0.453483
+Scatter data time 0.548447
+Scatter data time 0.658619
+Scatter data time 0.666447
+Calculation time 3.58123
+Calculation time 3.68823
+Calculation time 3.60438
+Calculation time 3.69472
+Gather result time 0.305488
+Total time 4.44723
+Gather result time 0.328925
+Total time 4.45862
+Gather result time 0.118342
+Total time 4.47171
 Total message size: 9.216984e-01 GB
-Gather result time 0.0720715
-Total time 20.7368
+Gather result time 0.202829
+Total time 4.47369

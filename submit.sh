@@ -9,7 +9,7 @@ cat <<EOF >n${n}_t${t}.sbatch
 #SBATCH --nodes=${n}
 #SBATCH --ntasks-per-node=1  
 #SBATCH --cpus-per-task=${t}
-#SBATCH --mem=2GB 
+#SBATCH --mem=6GB 
 #SBATCH --time=01:00:00 
 #SBATCH --verbose
 #SBATCH --output=n${n}_t${t}.out
