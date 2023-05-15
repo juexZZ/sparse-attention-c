@@ -267,6 +267,7 @@ int main(int argc, char* argv[]){
        std::cout<<"key value communication done"<<std::endl;  
     }
     double time2=MPI_Wtime();
+    double omp_time2=omp_get_wtime();
     std::cout<<"Scatter data time "<<time2-time1<<std::endl;
     
     // sparse attention
@@ -293,7 +294,9 @@ int main(int argc, char* argv[]){
     // attn_weight_value(attn_w_last, part_val_last, result_last, pattern_last);
     //communicate results, just gather
     double time3=MPI_Wtime();
+    double omp_time3=omp_get_wtime();
     std::cout<<"Calculation time "<<time3-time2<<std::endl;
+    std::cout<<"Openmp calculation time "<<omp_time3-omp_time2<<std::endl;
     if (is_debug)
     {
        std::cout<<"attention done"<<std::endl;  
