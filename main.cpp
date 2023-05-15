@@ -107,7 +107,7 @@ int main(int argc, char* argv[]){
     {
        std::cout<<"read data done"<<std::endl;  
     }
-    
+    MPI_Barrier(MPI_COMM_WORLD);//wait for all processes to finish reading
     double time1=MPI_Wtime();
     int row_size=pattern_proc.get_rows();
     // double part_query_first[row_size*d];
@@ -122,7 +122,6 @@ int main(int argc, char* argv[]){
     int* displs_back = new int[num_procs];
     int sendcount_front=row_size_front*d;
     int sendcount_back = row_size_back*d;
-    double pre_query_time;
     {
         int* sendcounts_front= new int[num_procs];
         int* sendcounts_back = new int[num_procs];
@@ -142,11 +141,8 @@ int main(int argc, char* argv[]){
             sendcounts_front[i]=row_sizes_front[i]*d;
             sendcounts_back[i] = row_sizes_back[i]*d;
         }
-        pre_query_time=MPI_Wtime();
-        std::cout<<"prepare for query communication time"<<pre_query_time-time1<<std::endl;
         MPI_Scatterv(query, sendcounts_front, displs_front, MPI_DOUBLE, part_query, sendcount_front, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Scatterv(query, sendcounts_back, displs_back, MPI_DOUBLE, part_query_back, sendcount_back, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        std::cout<<"query communication time"<<MPI_Wtime()-pre_query_time<<std::endl;
         if (my_rank==0)
         {
             for (size_t i = 1; i < num_procs; i++)
@@ -250,11 +246,8 @@ int main(int argc, char* argv[]){
                 MPI_Isend(send_val, col_sizes[i]*d, MPI_DOUBLE, i, 2*i+1, MPI_COMM_WORLD, &request_out2[i]);
             }
         }
-        double pre_kv_time=MPI_Wtime();
-        std::cout<<"prepare for key value communication time"<<pre_kv_time-query_done_time<<std::endl;
         MPI_Recv(part_key, col_size*d, MPI_DOUBLE, 0, 2*my_rank, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
         MPI_Recv(part_val, col_size*d, MPI_DOUBLE, 0, 2*my_rank+1, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-        std::cout<<"key value communication time"<<MPI_Wtime()-pre_kv_time<<std::endl;
         if (my_rank==0)
         {
             for (size_t i = 0; i < num_procs; i++)
