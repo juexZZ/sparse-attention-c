@@ -33,7 +33,7 @@ int main(int argc, char* argv[]){
     long total_comm=0;
     
     string data_dir=argv[1];
-    // threads=atoi(argv[2]);
+    threads=atoi(argv[2]);
     string query_file = "data/"+data_dir+"/query.txt";
     string key_file = "data/"+data_dir+"/key.txt";
     string value_file = "data/"+data_dir+"/value.txt";
@@ -56,9 +56,9 @@ int main(int argc, char* argv[]){
     MPI_Get_processor_name(processor_name, &name_len);
     printf("Rank %d/%d running on %s.\n", my_rank, num_procs, processor_name);
 
-// #ifdef _OPENMP
-//     omp_set_num_threads(threads);
-// #endif
+#ifdef _OPENMP
+    omp_set_num_threads(threads);
+#endif
     // read data and distribute to other processes
     // each process hold: part_query_first, part_key_first, part_value_first, part_query_last, part_key_last, part_value_last
     // to keep thread load balanced
@@ -273,12 +273,16 @@ int main(int argc, char* argv[]){
     double** attn_w = new double*[pattern_proc.get_rows()];
     // double** attn_w_first = new double*[pattern_first.get_rows()];
     // double** attn_w_last = new double*[pattern_last.get_rows()];
-
-    #pragma omp parallel for 
+    double omptime1=omp_get_wtime();
+    for(int r=0; r<pattern_proc.get_rows(); r++)
+    {
+       attn_w[r] = new double[pattern_proc.col_ids_row[r].size()];
+    }    
+    #pragma omp parallel for schedule(static,1)
     for(int r=0; r<pattern_proc.get_rows(); r++){
-        attn_w[r] = new double[pattern_proc.col_ids_row[r].size()];
         row_sparse_attention(part_query+r*d, part_key, attn_w[r], pattern_proc, r);
     }
+    std::cout<<"Get attention matrix time "<<omp_get_wtime()-omptime1<<std::endl;
 
     // for (int r = 0; r < row_ids_last.size(); r++)
     // {
@@ -288,10 +292,21 @@ int main(int argc, char* argv[]){
 
     // attention times value
     // initialize result matrix as the same size as value, initialize with 0
+    double omptime2=omp_get_wtime();
     vector<double> part_result(pattern_proc.get_rows()*d, 0);
     attn_weight_value(attn_w, part_val, part_result, pattern_proc);
+    std::cout<<"Get result time "<<omp_get_wtime()-omptime2<<std::endl;
     // attn_weight_value(attn_w_last, part_val_last, result_last, pattern_last);
     //communicate results, just gather
+    double omptime3=omp_get_wtime();
+    double test_sum=0;
+    #pragma omp parallel for reduction(+:test_sum)
+    for (size_t i = 0; i < N*d; i++)
+    {
+        test_sum+=key[i];
+    }
+    std::cout<<"OMP Test time "<<omp_get_wtime()-omptime3<<std::endl;
+    
     double time3=MPI_Wtime();
     std::cout<<"Calculation time "<<time3-time2<<std::endl;
     if (is_debug)
