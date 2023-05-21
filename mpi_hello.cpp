@@ -3,7 +3,7 @@
 #include<omp.h>
 #include<string>
 #include<mpi.h>
-
+using namespace std;
 // ********************* I/O *****************************
 // process 0 read data Q, K, V from separate files
 // query, key and value have same size: num x dim
@@ -29,7 +29,7 @@ int read_data(double* data, int num, int dim, string filename){
     return 0;
 }
 
-int main(){
+int main(int argc, char* argv[]){
     int num_procs, my_rank;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
