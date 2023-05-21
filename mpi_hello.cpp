@@ -1,7 +1,8 @@
-// g++ -fopenmp -O3 omp_hello.cpp -o hello
+// mpicxx -fopenmp -O3 mpi_hello.cpp -o mpi_hello
 #include<iostream>
 #include<omp.h>
 #include<string>
+#include<mpi.h>
 
 // ********************* I/O *****************************
 // process 0 read data Q, K, V from separate files
@@ -29,6 +30,12 @@ int read_data(double* data, int num, int dim, string filename){
 }
 
 int main(){
+    int num_procs, my_rank;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    std::cout << "Hello World from process " << my_rank << std::endl;
+    std::cout << "Number of processes: " << num_procs << std::endl;
     #pragma omp parallel
     {
     int capacity=omp_get_num_threads();
@@ -51,5 +58,6 @@ int main(){
     }
     double tt2=omp_get_wtime();
     std::cout<<"omp time: "<<tt2-tt1<<std::endl;
+    MPI_Finalize();
     return 0;
 }

@@ -7,7 +7,7 @@ cat <<EOF >t${t}.sbatch
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1  
 #SBATCH --cpus-per-task=${t}
-#SBATCH --mem=6GB 
+#SBATCH --mem=2GB 
 #SBATCH --time=01:00:00 
 #SBATCH --verbose
 #SBATCH --output=result_omp/t${t}.out
