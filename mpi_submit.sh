@@ -10,7 +10,7 @@ cat <<EOF >t${t}.sbatch
 #SBATCH --mem=2GB 
 #SBATCH --time=01:00:00 
 #SBATCH --verbose
-#SBATCH --output=result_omp/t${t}.out
+#SBATCH --output=result_mpi/t${t}.out
 
 module purge 
 module load gcc/10.2.0

@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
     std::size_t d_found=data_dir.find("d");
     N=stoi(data_dir.substr(n_found+1,d_found-n_found-1));
     d=stoi(data_dir.substr(d_found+1));
-    bool is_debug=false;
+    bool is_debug=true;
     if(is_debug){
         std::cout<<"N: "<<N<<endl;
         std::cout<<"d: "<<d<<endl;
@@ -304,6 +304,14 @@ int main(int argc, char* argv[]){
     for (size_t i = 0; i < N*d; i++)
     {
         test_sum+=key[i];
+    }
+     #pragma omp parallel
+    {
+    int capacity=omp_get_num_threads();
+        #pragma omp for
+        for(int i=0; i<capacity; i++){
+            std::cout << "Hello World from thread " << omp_get_thread_num() << std::endl;
+        }
     }
     std::cout<<"OMP Test time "<<omp_get_wtime()-omptime3<<std::endl;
     

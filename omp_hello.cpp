@@ -2,7 +2,7 @@
 #include<iostream>
 #include<omp.h>
 #include<string>
-
+using namespace std;
 // ********************* I/O *****************************
 // process 0 read data Q, K, V from separate files
 // query, key and value have same size: num x dim
