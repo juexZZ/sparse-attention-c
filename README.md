@@ -16,30 +16,17 @@ data will be stored as `query.txt`, `key.txt` and `value.txt` respectively.
 module load gcc/10.2.0  
 module load openmpi/gcc/4.0.5 
 
-### Todo list
+## Experiment Setup
+Compile: `make` or `mpicxx -std=c++11 -O3 -march=native main.cpp -o main`    
+Compile openmp: `mpicxx -std=c++11 -O3 -march=native main.cpp -fopenmp -o main`  
+Run: `mpirun -np <mpi_num> ./main <data_dir>`   
+e.g. `mpirun -np 2 ./main n32d8`  
+You can use [attention.sbatch](attention.sbatch) to submit single task or use `bash submit.sh` to submit tasks of different nodes.
 
-* [ ] how to start each process (partition data according to each row's sparse index)
-  * [ ] read from files: can we do parallel read? or read the whole file in process 0 and scatter (current plan)
-* [ ] how to implement W x V (Need communication, W is sparse)
-  * [ ] each process: part of Q, part K -> attention. which part(sparse index). part of V. Communicate the whole attention weights W.
-* [ ] create sparse index list for each process (and each row)
-
-### Data division
-
-query, divided by the proc_id
-key, dicided by the sparse pattern and proc_id, union
-
-### 05/11/2023
-
-- [ ] ~Juexiao: Modify the function to work with class SparsePattern and struct Id_vec~
-- [X] Juexiao: Attention x Value
-- [X] Yiwei: `main.cpp` line 91 double 2-d array change to 1-d, using total_count as index offset
-
-Env: _conda deactivate_  
-Compile: _make_ or _mpicxx -std=c++11 -O3 -march=native main.cpp -o main_    
-Compile openmp:  _mpicxx -std=c++11 -O3 -march=native main.cpp -fopenmp -o main_  
-Run: _mpirun -np <mpi_num> ./main <data_dir>_   
-e.g. _mpirun -np 2 ./main n32d8_  
+## Result
+You can see our results in [result](result). [result.ipynb](result/result.ipynb) is used to parse the result log file and plot.
+## Test Experiment
+Codes in [directory](omp_test) is used to test the OpenMP on Greene. [omp_hello](omp_test/omp_hello.cpp) is used to test if a pure OpenMP program can be executed correctly on Greene, and [mpi_hello](omp_test/mpi_hello.cpp) is used to test if a hybrid MPI and OpenMP program can be executed correctly. [mpi_submit.sh](omp_test/mpi_submit.sh) and [omp_submit.sh](omp_test/omp_submit.sh) are corresponding shell scripts to submit tasks. Pure OpemMP programs run successfully on Greene but unfortunately MPI and OpenMP hybrid program cannot run OpenMP parallel. 
 
 
 
